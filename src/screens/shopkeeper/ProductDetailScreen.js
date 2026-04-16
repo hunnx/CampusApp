@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  ActivityIndicator,
 } from 'react-native';
+import Header from '../../components/common/Header';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProduct } from '../../redux/slices/productSlice';
 import Button from '../../components/buttons/Button';
@@ -62,7 +62,9 @@ const ProductDetailScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
+      <Header title="Product Details" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.imageSection}>
         <Image source={{ uri: currentProduct.image }} style={styles.productImage} />
         {renderStatusBadge()}
@@ -140,6 +142,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         />
       </View>
     </ScrollView>
+    </View>
   );
 };
 

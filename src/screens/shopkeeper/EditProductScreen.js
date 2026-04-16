@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   TouchableOpacity,
+  Alert,
   Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProduct } from '../../redux/slices/productSlice';
+import Header from '../../components/common/Header';
 import Input from '../../components/common/Input';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, PRODUCT_CATEGORIES } from '../../constants';
@@ -196,7 +197,9 @@ const EditProductScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
+      <Header title="Edit Product" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <Text style={styles.title}>Edit Product</Text>
 
       <Input
@@ -248,6 +251,7 @@ const EditProductScreen = ({ route, navigation }) => {
         />
       </View>
     </ScrollView>
+    </View>
   );
 };
 

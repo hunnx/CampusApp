@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, updateOrderStatus } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
@@ -251,12 +252,15 @@ const OrderDetailScreen = ({ route, navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
+      <Header title="Order Details" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       {renderOrderInfo()}
       {renderLocationInfo()}
       {renderOrderItems()}
       {renderActions()}
     </ScrollView>
+    </View>
   );
 };
 

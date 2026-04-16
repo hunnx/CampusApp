@@ -9,6 +9,7 @@ import {
   FlatList,
   Image,
 } from 'react-native';
+import Header from '../../components/common/Header';
 import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
 import Button from '../../components/buttons/Button';
 
@@ -156,7 +157,7 @@ const CartScreen = ({ navigation }) => {
         <Text style={styles.emptySubtext}>Add some delicious items to get started!</Text>
         <Button
           title="Browse Products"
-          onPress={() => navigation.navigate('StudentHome')}
+          onPress={() => navigation.navigate('Home')}
           style={styles.browseButton}
         />
       </View>
@@ -196,10 +197,7 @@ const CartScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Shopping Cart</Text>
-        <Text style={styles.itemCount}>{cartItems.length} items</Text>
-      </View>
+      <Header title="Shopping Cart" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.itemCount}>{cartItems.length} items</Text>} />
 
       {cartItems.length > 0 ? (
         <FlatList

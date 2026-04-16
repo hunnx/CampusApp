@@ -9,7 +9,7 @@ export const createOrder = createAsyncThunk(
       // API call would go here
       // const response = await api.post('/orders', orderData);
       
-      // Mock response for demo
+      // Create new order
       const newOrder = {
         id: Date.now().toString(),
         ...orderData,
@@ -32,48 +32,8 @@ export const fetchOrders = createAsyncThunk(
       // API call would go here
       // const response = await api.get(`/orders?userId=${userId}&role=${userRole}`);
       
-      // Mock data for demo
-      const mockOrders = [
-        {
-          id: '1',
-          studentId: 'student1',
-          studentName: 'John Doe',
-          shopkeeperId: 'shopkeeper1',
-          shopkeeperName: 'Campus Cafe',
-          delivererId: null,
-          delivererName: null,
-          items: [
-            { productId: '1', name: 'Fresh Juice', price: 150, quantity: 2 },
-            { productId: '2', name: 'Sandwich', price: 200, quantity: 1 },
-          ],
-          totalAmount: 500,
-          deliveryCharge: 100,
-          status: ORDER_STATUS.PENDING,
-          createdAt: new Date().toISOString(),
-          pickupLocation: 'Campus Cafe',
-          dropLocation: 'Hostel A',
-        },
-        {
-          id: '2',
-          studentId: 'student2',
-          studentName: 'Jane Smith',
-          shopkeeperId: 'shopkeeper1',
-          shopkeeperName: 'Campus Cafe',
-          delivererId: 'deliverer1',
-          delivererName: 'Mike Johnson',
-          items: [
-            { productId: '3', name: 'Coffee', price: 120, quantity: 1 },
-          ],
-          totalAmount: 220,
-          deliveryCharge: 100,
-          status: ORDER_STATUS.READY,
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          pickupLocation: 'Campus Cafe',
-          dropLocation: 'Library',
-        },
-      ];
-      
-      return mockOrders;
+      // For demo, return empty array - orders are managed in Redux state
+      return [];
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
     }
@@ -168,7 +128,10 @@ const orderSlice = createSlice({
       })
       .addCase(fetchOrders.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.orders = action.payload;
+        // Only replace orders if we have new data, otherwise keep existing (for demo)
+        if (action.payload.length > 0) {
+          state.orders = action.payload;
+        }
         state.error = null;
       })
       .addCase(fetchOrders.rejected, (state, action) => {

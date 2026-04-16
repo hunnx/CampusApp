@@ -12,8 +12,14 @@ import {
   Switch,
   Modal,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { addProduct } from '../../redux/slices/productSlice';
+import Header from '../../components/common/Header';
+import Input from '../../components/common/Input';
+import Button from '../../components/buttons/Button';
+import { COLORS, SIZES } from '../../constants';
 
-const AddProductScreen = ({ navigate }) => {
+const AddProductScreen = ({ navigate, navigation }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -75,18 +81,10 @@ const AddProductScreen = ({ navigate }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
-      
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigate('Products')}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>➕ Add Product</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <Header title="Add Product" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        
         <View style={styles.form}>
           {/* Product Name */}
           <View style={styles.inputContainer}>
@@ -230,7 +228,7 @@ const AddProductScreen = ({ navigate }) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

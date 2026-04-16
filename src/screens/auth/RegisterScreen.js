@@ -10,8 +10,10 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import Header from '../../components/common/Header';
+import { COLORS, SIZES } from '../../constants';
 
-const RegisterScreen = ({ navigate, handleLogin }) => {
+const RegisterScreen = ({ navigation }) => {
   // Dummy credentials for testing
   const [formData, setFormData] = useState({
     name: 'John Doe',
@@ -63,9 +65,8 @@ const RegisterScreen = ({ navigate, handleLogin }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
-      
+    <View style={styles.container}>
+      <Header title="Create Account" onBackPress={() => navigation.goBack()} />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Header */}
@@ -169,13 +170,13 @@ const RegisterScreen = ({ navigate, handleLogin }) => {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigate('Login')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={styles.linkText}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

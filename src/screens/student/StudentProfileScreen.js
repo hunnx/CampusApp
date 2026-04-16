@@ -11,6 +11,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, clearError } from '../../redux/slices/authSlice';
 import { fetchUserProfile, updateProfile } from '../../redux/slices/userSlice';
+import Header from '../../components/common/Header';
 import Input from '../../components/common/Input';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES } from '../../constants';
@@ -96,7 +97,9 @@ const StudentProfileScreen = ({ navigation }) => {
         },
         {
           text: 'Logout',
-          onPress: () => dispatch(logout()),
+          onPress: () => {
+            dispatch(logout());
+          },
         },
       ]
     );
@@ -318,13 +321,16 @@ const StudentProfileScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
+      <Header title="My Profile" />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       {renderProfileHeader()}
       {renderStatsSection()}
       {renderEditForm()}
       {renderQuickActions()}
       {renderActions()}
     </ScrollView>
+    </View>
   );
 };
 

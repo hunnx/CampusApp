@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -41,18 +42,28 @@ const DelivererNavigator = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
+          let fallbackIcon;
 
           if (route.name === 'Available') {
             iconName = focused ? 'list' : 'list';
+            fallbackIcon = '📋';
           } else if (route.name === 'Active') {
             iconName = focused ? 'local-shipping' : 'local-shipping';
+            fallbackIcon = '🚴';
           } else if (route.name === 'History') {
             iconName = focused ? 'history' : 'history';
+            fallbackIcon = '📜';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person';
+            fallbackIcon = '👤';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          try {
+            return <Icon name={iconName} size={size} color={color} />;
+          } catch (error) {
+            // Fallback to text icon if vector icon fails
+            return <Text style={{ fontSize: size, color }}>{fallbackIcon}</Text>;
+          }
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray,

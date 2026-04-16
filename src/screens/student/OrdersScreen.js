@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
@@ -43,6 +44,7 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   const handleOrderPress = (order) => {
+    console.log('OrdersScreen - Order pressed:', order.id, order);
     navigation.navigate('OrderTracking', { orderId: order.id });
   };
 
@@ -149,7 +151,7 @@ const OrdersScreen = ({ navigation }) => {
         </Text>
         <TouchableOpacity
           style={styles.shopButton}
-          onPress={() => navigation.navigate('StudentHome')}
+          onPress={() => navigation.navigate('Home')}
         >
           <Text style={styles.shopButtonText}>Start Shopping</Text>
         </TouchableOpacity>
@@ -159,12 +161,7 @@ const OrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Orders</Text>
-        <Text style={styles.subtitle}>
-          {orders.filter(o => o.studentId === user?.id).length} total orders
-        </Text>
-      </View>
+      <Header title="My Orders" rightComponent={<Text style={styles.subtitle}>{orders.filter(o => o.studentId === user?.id).length} total orders</Text>} />
 
       {renderFilterTabs()}
 

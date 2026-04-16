@@ -1,183 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   FlatList,
-  StatusBar,
-  SafeAreaView,
 } from 'react-native';
+import Header from '../../components/common/Header';
+import { COLORS, SIZES } from '../../constants';
 
-const StudentHomeScreen = ({ navigate, handleLogout }) => {
-  // Mock products data
+const StudentHomeScreen = ({ navigation }) => {
   const [products] = useState([
-    {
-      id: 1,
-      name: 'Burger Combo',
-      price: 350,
-      category: 'Fast Food',
-      image: '🍔',
-      available: true,
-    },
-    {
-      id: 2,
-      name: 'Pizza Slice',
-      price: 200,
-      category: 'Fast Food',
-      image: '🍕',
-      available: true,
-    },
-    {
-      id: 3,
-      name: 'Sandwich',
-      price: 150,
-      category: 'Snacks',
-      image: '🥪',
-      available: true,
-    },
-    {
-      id: 4,
-      name: 'Pasta Bowl',
-      price: 280,
-      category: 'Italian',
-      image: '🍝',
-      available: true,
-    },
-    {
-      id: 5,
-      name: 'Salad Bowl',
-      price: 180,
-      category: 'Healthy',
-      image: '🥗',
-      available: true,
-    },
-    {
-      id: 6,
-      name: 'Ice Cream',
-      price: 120,
-      category: 'Desserts',
-      image: '🍦',
-      available: false,
-    },
+    { id: 1, name: 'Burger Combo', price: 350, category: 'Fast Food', image: '🍔', available: true },
+    { id: 2, name: 'Pizza Slice', price: 200, category: 'Fast Food', image: '🍕', available: true },
+    { id: 3, name: 'Sandwich', price: 150, category: 'Snacks', image: '🥪', available: true },
+    { id: 4, name: 'Pasta Bowl', price: 280, category: 'Italian', image: '🍝', available: true },
+    { id: 5, name: 'Salad Bowl', price: 180, category: 'Healthy', image: '🥗', available: true },
+    { id: 6, name: 'Ice Cream', price: 120, category: 'Desserts', image: '🍦', available: false },
   ]);
 
-  const ProductCard = ({ product }) => (
-    <TouchableOpacity style={styles.productCard}>
+  const handleProductPress = useCallback((product) => {
+    navigation.navigate('ProductDetail', { product });
+  }, [navigation]);
+
+  const renderProduct = useCallback(({ item }) => (
+    <TouchableOpacity style={styles.productCard} onPress={() => handleProductPress(item)}>
       <View style={styles.productImage}>
-        <Text style={styles.productEmoji}>{product.image}</Text>
+        <Text style={styles.productEmoji}>{item.image}</Text>
       </View>
       <View style={styles.productInfo}>
-        <Text style={styles.productName}>{product.name}</Text>
-        <Text style={styles.productCategory}>{product.category}</Text>
-        <Text style={styles.productPrice}>PKR {product.price}</Text>
+        <Text style={styles.productName}>{item.name}</Text>
+        <Text style={styles.productCategory}>{item.category}</Text>
+        <Text style={styles.productPrice}>PKR {item.price}</Text>
         <View style={[
           styles.availabilityBadge,
-          { backgroundColor: product.available ? '#4CAF50' : '#f44336' }
+          { backgroundColor: item.available ? COLORS.success : COLORS.danger }
         ]}>
           <Text style={styles.availabilityText}>
-            {product.available ? 'Available' : 'Out of Stock'}
+            {item.available ? 'Available' : 'Out of Stock'}
           </Text>
         </View>
       </View>
     </TouchableOpacity>
-  );
+  ), [handleProductPress]);
+
+  const productsKeyExtractor = useCallback((item) => item.id.toString(), []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
-      
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigate('Welcome')}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>🎓 Student Home</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.productsGrid}>
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🏠</Text>
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>📦</Text>
-          <Text style={styles.navLabel}>Orders</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>👤</Text>
-          <Text style={styles.navLabel}>Profile</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={handleLogout}>
-          <Text style={styles.navIcon}>🚪</Text>
-          <Text style={styles.navLabel}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <Header title="🎓 Student Home" />
+      <FlatList
+        style={styles.scrollView}
+        data={products}
+        renderItem={renderProduct}
+        keyExtractor={productsKeyExtractor}
+        numColumns={2}
+        contentContainerStyle={styles.productsGrid}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={6}
+        windowSize={10}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.light,
   },
   scrollView: {
     flex: 1,
-  },
-  header: {
-    backgroundColor: '#2e7d32',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  backButtonText: {
-    fontSize: 20,
-    color: '#ffffff',
-    fontWeight: 'bold',
-  },
-  placeholder: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
   },
   productsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 100, // Space for bottom nav
+    paddingHorizontal: SIZES.padding,
+    paddingTop: SIZES.padding,
+    paddingBottom: SIZES.padding * 4,
   },
   productCard: {
     width: '48%',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.base * 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -189,65 +96,42 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: SIZES.radius,
+    borderTopRightRadius: SIZES.radius,
   },
   productEmoji: {
     fontSize: 40,
   },
   productInfo: {
-    padding: 12,
+    padding: SIZES.base,
   },
   productName: {
-    fontSize: 16,
+    fontSize: SIZES.font,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    color: COLORS.dark,
+    marginBottom: 2,
   },
   productCategory: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 8,
+    fontSize: SIZES.font - 2,
+    color: COLORS.gray,
+    marginBottom: SIZES.base / 2,
   },
   productPrice: {
-    fontSize: 18,
+    fontSize: SIZES.font + 2,
     fontWeight: 'bold',
-    color: '#2e7d32',
-    marginBottom: 8,
+    color: COLORS.primary,
+    marginBottom: SIZES.base / 2,
   },
   availabilityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: SIZES.base,
+    paddingVertical: 2,
+    borderRadius: SIZES.radius,
     alignSelf: 'flex-start',
   },
   availabilityText: {
-    color: '#ffffff',
-    fontSize: 10,
+    color: COLORS.white,
+    fontSize: SIZES.font - 4,
     fontWeight: '600',
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#ffffff',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  navIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  navLabel: {
-    fontSize: 12,
-    color: '#666',
   },
 });
 

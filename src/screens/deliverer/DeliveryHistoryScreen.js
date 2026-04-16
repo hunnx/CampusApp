@@ -6,9 +6,11 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
@@ -208,10 +210,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Delivery History</Text>
-        <Text style={styles.subtitle}>Your completed deliveries</Text>
-      </View>
+      <Header title="Delivery History" rightComponent={<Text style={styles.subtitle}>{getCompletedOrders().length} completed</Text>} />
 
       {renderStatsBar()}
       {renderFilterTabs()}

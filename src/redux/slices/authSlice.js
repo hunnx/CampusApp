@@ -11,7 +11,9 @@ export const loginUser = createAsyncThunk(
       
       // Mock response for demo
       const mockUser = {
-        id: '1',
+        id: credentials.role === USER_ROLES.SHOPKEEPER ? '1' : 
+              credentials.role === USER_ROLES.DELIVERER ? 'deliverer1' :
+              credentials.email.split('@')[0],
         name: credentials.email.split('@')[0],
         email: credentials.email,
         role: credentials.role || USER_ROLES.STUDENT,

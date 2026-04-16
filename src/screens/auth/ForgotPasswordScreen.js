@@ -7,8 +7,10 @@ import {
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import Header from '../../components/common/Header';
 import Input from '../../components/common/Input';
 import Button from '../../components/buttons/Button';
+import { COLORS, SIZES } from '../../constants';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -63,7 +65,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
+      <Header title="Forgot Password" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>
@@ -97,6 +101,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </View>
   );
 };
 

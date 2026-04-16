@@ -6,10 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  RefreshControl,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, updateOrderStatus } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
@@ -157,10 +157,7 @@ const ActiveDeliveryScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Active Delivery</Text>
-        <Text style={styles.subtitle}>Currently delivering orders</Text>
-      </View>
+      <Header title="Active Delivery" rightComponent={<Text style={styles.subtitle}>{getActiveOrders().length} in progress</Text>} />
 
       {renderStatsBar()}
 

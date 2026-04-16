@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -27,6 +28,16 @@ const HomeStack = () => {
   );
 };
 
+// Cart Stack Navigator
+const CartStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="CartList" component={CartScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
+    </Stack.Navigator>
+  );
+};
+
 // Orders Stack Navigator
 const OrdersStack = () => {
   return (
@@ -37,24 +48,43 @@ const OrdersStack = () => {
   );
 };
 
+// Profile Stack Navigator
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="StudentProfile" component={StudentProfileScreen} />
+    </Stack.Navigator>
+  );
+};
+
 const StudentNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
+          let fallbackIcon;
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home';
+            fallbackIcon = '🏠';
           } else if (route.name === 'Cart') {
             iconName = focused ? 'shopping-cart' : 'shopping-cart';
+            fallbackIcon = '🛒';
           } else if (route.name === 'Orders') {
             iconName = focused ? 'receipt' : 'receipt';
+            fallbackIcon = '📋';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person';
+            fallbackIcon = '👤';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          try {
+            return <Icon name={iconName} size={size} color={color} />;
+          } catch (error) {
+            // Fallback to text icon if vector icon fails
+            return <Text style={{ fontSize: size, color }}>{fallbackIcon}</Text>;
+          }
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray,
@@ -77,7 +107,7 @@ const StudentNavigator = () => {
       />
       <Tab.Screen 
         name="Cart" 
-        component={CartScreen}
+        component={CartStack}
         options={{ tabBarLabel: 'Cart' }}
       />
       <Tab.Screen 
@@ -87,7 +117,7 @@ const StudentNavigator = () => {
       />
       <Tab.Screen 
         name="Profile" 
-        component={StudentProfileScreen}
+        component={ProfileStack}
         options={{ tabBarLabel: 'Profile' }}
       />
     </Tab.Navigator>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,15 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import Header from '../../components/common/Header';
+import Button from '../../components/buttons/Button';
+import { COLORS, SIZES } from '../../constants';
 
 const { width } = Dimensions.get('window');
 const productCardWidth = (width - 48) / 2; // 2 products per row
 
-const ProductsScreen = ({ navigate }) => {
+const ProductsScreen = ({ navigation }) => {
   // Mock products data
   const [products, setProducts] = useState([
     {
@@ -129,18 +133,16 @@ const ProductsScreen = ({ navigate }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
-      
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigate('ShopkeeperDashboard')}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>🛍️ My Products</Text>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
-          <Text style={styles.addButtonText}>➕ Add Product</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <Header 
+        title="🛍️ My Products" 
+        onBackPress={() => navigation.goBack()} 
+        rightComponent={
+          <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
+            <Text style={styles.addButtonText}>➕ Add Product</Text>
+          </TouchableOpacity>
+        }
+      />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.productsGrid}>
@@ -149,7 +151,7 @@ const ProductsScreen = ({ navigate }) => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

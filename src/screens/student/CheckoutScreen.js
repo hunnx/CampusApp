@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import Input from '../../components/common/Input';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
@@ -50,6 +51,8 @@ const CheckoutScreen = ({ route, navigation }) => {
       const orderData = {
         studentId: user?.id,
         studentName: user?.name,
+        shopkeeperId: items[0]?.shopkeeperId || '1', // Use actual shopkeeperId from product, default to '1'
+        shopkeeperName: items[0]?.shopkeeperName || 'Campus Shop',
         items: items.map(item => ({
           productId: item.id,
           name: item.name,
@@ -66,20 +69,8 @@ const CheckoutScreen = ({ route, navigation }) => {
 
       const newOrder = await dispatch(createOrder(orderData)).unwrap();
       
-      Alert.alert(
-        'Order Placed!',
-        'Your order has been placed successfully. You can track it in the Orders section.',
-        [
-          {
-            text: 'Track Order',
-            onPress: () => navigation.navigate('OrderTracking', { orderId: newOrder.id }),
-          },
-          {
-            text: 'Continue Shopping',
-            onPress: () => navigation.navigate('StudentHome'),
-          },
-        ]
-      );
+      // Navigate to Orders screen
+      navigation.navigate('Orders');
     } catch (error) {
       Alert.alert('Error', 'Failed to place order. Please try again.');
     }
@@ -114,9 +105,9 @@ const CheckoutScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Text style={styles.title}>Checkout</Text>
-
+    <View style={styles.container}>
+      <Header title="Checkout" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Order Items</Text>
         {renderOrderItems()}
@@ -191,6 +182,7 @@ const CheckoutScreen = ({ route, navigation }) => {
         />
       </View>
     </ScrollView>
+    </View>
   );
 };
 

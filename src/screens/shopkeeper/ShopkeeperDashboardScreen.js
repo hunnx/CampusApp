@@ -5,14 +5,14 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StatusBar,
-  SafeAreaView,
   Alert,
   Dimensions,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
+import Header from '../../components/common/Header';
 import DashboardCard from '../../components/cards/DashboardCard';
+import { COLORS, SIZES } from '../../constants';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 48) / 2; // 2 cards per row with padding
@@ -47,18 +47,9 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
-      
+    <View style={styles.container}>
+      <Header title="🏪 Shopkeeper Dashboard" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigate('Welcome')}>
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>🏪 Shopkeeper Dashboard</Text>
-          <View style={styles.placeholder} />
-        </View>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -143,7 +134,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

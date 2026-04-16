@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, acceptOrder } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
@@ -135,10 +136,7 @@ const AvailableOrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Available Orders</Text>
-        <Text style={styles.subtitle}>Orders ready for pickup</Text>
-      </View>
+      <Header title="Available Orders" rightComponent={<Text style={styles.subtitle}>{getAvailableOrders().length} orders</Text>} />
 
       {renderStatsBar()}
 

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, updateOrderStatus } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
@@ -158,12 +159,7 @@ const ShopkeeperOrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Orders</Text>
-        <Text style={styles.subtitle}>
-          {orders.filter(o => o.shopkeeperId === user?.id).length} total orders
-        </Text>
-      </View>
+      <Header title="Shop Orders" rightComponent={<Text style={styles.subtitle}>{orders.filter(o => o.shopkeeperId === user?.id).length} orders</Text>} />
 
       {renderFilterTabs()}
 

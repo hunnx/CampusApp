@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders } from '../../redux/slices/orderSlice';
+import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
@@ -23,9 +24,11 @@ const OrderTrackingScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     loadOrderDetails();
-  }, [orderId]);
+  }, [orderId, orders]);
 
   const loadOrderDetails = async () => {
+    console.log('OrderTrackingScreen - Loading order details for orderId:', orderId);
+    console.log('OrderTrackingScreen - Current orders:', orders);
     try {
       await dispatch(fetchOrders({ 
         userId: user?.id, 
@@ -33,6 +36,7 @@ const OrderTrackingScreen = ({ route, navigation }) => {
       })).unwrap();
       
       const foundOrder = orders.find(o => o.id === orderId);
+      console.log('OrderTrackingScreen - Found order:', foundOrder);
       setOrder(foundOrder);
     } catch (error) {
       console.error('Failed to load order details:', error);
@@ -263,24 +267,25 @@ const OrderTrackingScreen = ({ route, navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Loading order details...</Text>
+        <Text style={styles.errorText}>Order ID: {orderId}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Order Tracking</Text>
+    <View style={styles.container}>
+      <Header title="Order Tracking" onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
           <Text style={styles.statusText}>{order.status.toUpperCase()}</Text>
         </View>
-      </View>
 
-      {renderTimeline()}
-      {renderOrderInfo()}
-      {renderOrderItems()}
-      {renderActions()}
-    </ScrollView>
+        {renderTimeline()}
+        {renderOrderInfo()}
+        {renderOrderItems()}
+        {renderActions()}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -483,6 +488,11 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: SIZES.font,
     color: COLORS.gray,
+  },
+  errorText: {
+    fontSize: SIZES.font - 2,
+    color: COLORS.gray,
+    marginTop: SIZES.base,
   },
 });
 

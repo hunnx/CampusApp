@@ -8,13 +8,14 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
 
 const ProductDetailScreen = ({ route, navigation }) => {
-  const { product } = route.params;
+  const { product } = route.params || {};
   const [quantity, setQuantity] = useState(1);
-  const [totalPrice, setTotalPrice] = useState(product.price);
+  const [totalPrice, setTotalPrice] = useState(product?.price || 0);
 
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
@@ -128,7 +129,9 @@ const ProductDetailScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
+      <Header title={product?.name || 'Product Details'} onBackPress={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.imageSection}>
         <Image source={{ uri: product.image }} style={styles.productImage} />
         <View style={styles.shopInfo}>
@@ -171,6 +174,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         />
       </View>
     </ScrollView>
+    </View>
   );
 };
 
