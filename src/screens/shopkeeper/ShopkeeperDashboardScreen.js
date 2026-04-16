@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,25 +7,103 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
+import { fetchShopkeeperOrders } from '../../redux/slices/orderSlice';
+import socketService from '../../services/socket';
 import Header from '../../components/common/Header';
 import DashboardCard from '../../components/cards/DashboardCard';
-import { COLORS, SIZES } from '../../constants';
+import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 48) / 2; // 2 cards per row with padding
 
 const ShopkeeperDashboardScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  // Mock data for dashboard
-  const dashboardStats = {
-    categories: 8,
-    totalProducts: 45,
-    totalOrders: 128,
-    completedOrders: 115,
+  const { user } = useSelector(state => state.auth);
+  const { orders } = useSelector(state => state.orders);
+  
+  const [refreshing, setRefreshing] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    categories: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    completedOrders: 0,
+  });
+
+  useEffect(() => {
+    // Load initial data
+    loadDashboardData();
+    
+    // Join shopkeeper room for real-time updates
+    if (user?.id) {
+      console.log('Dashboard joining shopkeeper room:', user.id);
+      socketService.joinShopkeeperRoom(user.id);
+    }
+    
+    // Listen for new orders
+    socketService.onNewOrder((orderData) => {
+      console.log('Dashboard received new order:', orderData);
+      if (orderData.shopkeeperId === user?.id) {
+        console.log('Order is for this shopkeeper, refreshing data');
+        // Refresh dashboard data when new order arrives
+        loadDashboardData();
+        Alert.alert('New Order!', 'A new order has been placed for your shop.');
+      } else {
+        console.log('Order is for different shopkeeper:', orderData.shopkeeperId, 'vs', user?.id);
+      }
+    });
+    
+    // Listen for order status updates
+    socketService.onOrderStatusUpdate((updateData) => {
+      console.log('Dashboard received order status update:', updateData);
+      // Refresh dashboard data when order status changes
+      loadDashboardData();
+    });
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    try {
+      if (user?.id) {
+        console.log('Loading dashboard data for shopkeeper:', user.id);
+        const result = await dispatch(fetchShopkeeperOrders(user.id));
+        console.log('Dashboard data loaded:', result.payload);
+        updateDashboardStats();
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    }
   };
+
+  const updateDashboardStats = () => {
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter(order => order.status === ORDER_STATUS.COMPLETED).length;
+    
+    setDashboardStats(prev => ({
+      ...prev,
+      totalOrders,
+      completedOrders,
+      // For demo purposes, set some reasonable defaults for categories and products
+      // In a real app, these would come from separate API calls
+      categories: 5,
+      totalProducts: 25,
+    }));
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (Array.isArray(orders)) {
+      console.log('Shopkeeper dashboard orders updated:', orders);
+      updateDashboardStats();
+    }
+  }, [orders]);
 
   const handleCardPress = (cardType) => {
     switch (cardType) {
@@ -35,7 +113,15 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         break;
       case 'orders':
         // Navigate to Orders Screen
-        Alert.alert('Orders', 'Navigate to Orders Screen');
+        navigation.navigate('ShopkeeperOrders');
+        break;
+      case 'categories':
+        // Navigate to Categories Screen (if exists)
+        Alert.alert('Categories', 'Navigate to Categories Screen');
+        break;
+      case 'completed':
+        // Navigate to Orders Screen with completed filter
+        navigation.navigate('ShopkeeperOrders', { filter: ORDER_STATUS.COMPLETED });
         break;
       default:
         Alert.alert('Card Pressed', `You pressed ${cardType}`);
@@ -49,7 +135,13 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Header title="🏪 Shopkeeper Dashboard" />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -101,7 +193,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
             <Text style={styles.actionText}>Add New Product</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('ShopkeeperOrders')}>
             <Text style={styles.actionIcon}>📋</Text>
             <Text style={styles.actionText}>View Orders</Text>
           </TouchableOpacity>
@@ -114,17 +206,33 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
 
         {/* Recent Orders Preview */}
         <View style={styles.recentOrders}>
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
+          <View style={styles.recentOrdersHeader}>
+            <Text style={styles.sectionTitle}>Recent Orders</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('ShopkeeperOrders')}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
           
-          {[1, 2, 3].map((item) => (
-            <View key={item} style={styles.orderItem}>
+          {orders.slice(0, 3).map((order) => (
+            <TouchableOpacity 
+              key={order.id} 
+              style={styles.orderItem}
+              onPress={() => navigation.navigate('ShopkeeperOrders')}
+            >
               <View style={styles.orderInfo}>
-                <Text style={styles.orderId}>Order #{1000 + item}</Text>
-                <Text style={styles.orderStatus}>Preparing</Text>
+                <Text style={styles.orderId}>Order #{String(order.id).slice(-6)}</Text>
+                <Text style={styles.orderStatus}>{order.status}</Text>
               </View>
-              <Text style={styles.orderAmount}>PKR {(item * 250 + 150)}</Text>
-            </View>
+              <Text style={styles.orderAmount}>PKR {order.totalAmount + order.deliveryCharge}</Text>
+            </TouchableOpacity>
           ))}
+          
+          {orders.length === 0 && (
+            <View style={styles.noOrdersContainer}>
+              <Text style={styles.noOrdersText}>No orders yet</Text>
+              <Text style={styles.noOrdersSubtext}>Orders will appear here when placed</Text>
+            </View>
+          )}
         </View>
 
         {/* Logout Button */}
@@ -256,6 +364,31 @@ const styles = StyleSheet.create({
   recentOrders: {
     paddingHorizontal: 24,
     marginBottom: 24,
+  },
+  recentOrdersHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SIZES.padding,
+  },
+  viewAllText: {
+    fontSize: SIZES.font - 1,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  noOrdersContainer: {
+    alignItems: 'center',
+    padding: SIZES.padding,
+  },
+  noOrdersText: {
+    fontSize: SIZES.font,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
+  noOrdersSubtext: {
+    fontSize: SIZES.font - 2,
+    color: COLORS.gray,
+    marginTop: 4,
   },
   orderItem: {
     backgroundColor: '#ffffff',

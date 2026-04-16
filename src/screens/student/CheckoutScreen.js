@@ -72,7 +72,7 @@ const CheckoutScreen = ({ route, navigation }) => {
         orderNotes,
       };
 
-      console.log('Placing order with data:', orderData);
+      console.log('Creating order with shopkeeperId:', orderData.shopkeeperId, 'for user:', user.id);
       
       const newOrder = await dispatch(createOrder(orderData));
       

@@ -94,7 +94,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Order ID:</Text>
-          <Text style={styles.infoValue}>#{order.id.slice(-6)}</Text>
+          <Text style={styles.infoValue}>#{String(order.id).slice(-6)}</Text>
         </View>
         
         <View style={styles.infoRow}>

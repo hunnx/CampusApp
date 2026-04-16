@@ -110,7 +110,7 @@ const OrderCard = ({
     >
       <View style={styles.header}>
         <View style={styles.orderInfo}>
-          <Text style={styles.orderId}>Order #{order?.id?.slice(-6) || 'N/A'}</Text>
+          <Text style={styles.orderId}>Order #{order?.id ? String(order.id).slice(-6) : 'N/A'}</Text>
           <Text style={styles.orderTime}>
             {order?.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}
           </Text>

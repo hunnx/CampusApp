@@ -15,13 +15,13 @@ import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
-const ShopkeeperOrdersScreen = ({ navigation }) => {
+const ShopkeeperOrdersScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const { orders, isLoading } = useSelector(state => state.orders);
   const { user, token } = useSelector(state => state.auth);
   
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState(route?.params?.filter || 'All');
 
   useEffect(() => {
     loadOrders();

@@ -148,7 +148,7 @@ const DeliveryMapScreen = ({ route, navigation }) => {
         
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Order ID:</Text>
-          <Text style={styles.summaryValue}>#{order.id.slice(-6)}</Text>
+          <Text style={styles.summaryValue}>#{String(order.id).slice(-6)}</Text>
         </View>
         
         <View style={styles.summaryRow}>

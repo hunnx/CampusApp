@@ -3,6 +3,37 @@ import { ORDER_STATUS } from '../../constants';
 import api from '../../services/api';
 import socketService from '../../services/socket';
 
+// Mock storage for orders (in a real app, this would be a database)
+let mockOrdersStorage = [];
+
+const getMockOrdersByShopkeeper = (shopkeeperId) => {
+  return mockOrdersStorage.filter(order => order.shopkeeperId === shopkeeperId);
+};
+
+const getMockOrdersByStudent = (studentId) => {
+  return mockOrdersStorage.filter(order => order.studentId === studentId);
+};
+
+const getMockOrdersByDeliverer = (delivererId) => {
+  return mockOrdersStorage.filter(order => order.delivererId === delivererId);
+};
+
+const normalizeOrdersPayload = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (!payload) {
+    return [];
+  }
+  if (payload.orders && Array.isArray(payload.orders)) {
+    return payload.orders;
+  }
+  if (payload.data && Array.isArray(payload.data)) {
+    return payload.data;
+  }
+  return [payload];
+};
+
 // Async thunks
 export const createOrder = createAsyncThunk(
   'orders/createOrder',
@@ -17,6 +48,9 @@ export const createOrder = createAsyncThunk(
         socket.emit('newOrder', response);
       }
       
+      // Persist the order in mock storage for offline/demo review
+      saveOrderToMockStorage(response);
+      
       return response;
     } catch (error) {
       // API call failed, create mock order for demo purposes
@@ -28,6 +62,11 @@ export const createOrder = createAsyncThunk(
         status: ORDER_STATUS.PENDING,
         createdAt: new Date().toISOString(),
       };
+      
+      // Store in mock storage
+      saveOrderToMockStorage(mockOrder);
+      console.log('Order stored in mock storage:', mockOrder);
+      console.log('Total orders in storage:', mockOrdersStorage.length);
       
       // Still emit socket event for real-time updates
       const socket = socketService.socket;
@@ -55,10 +94,19 @@ export const fetchOrders = createAsyncThunk(
       }
       
       const response = await api.get(endpoint);
-      return response;
+      return normalizeOrdersPayload(response);
     } catch (error) {
-      // API call failed, return empty array for demo
-      console.log('API call failed, returning empty orders for demo');
+      // API call failed, return orders from mock storage for demo
+      console.log('API call failed, returning mock orders for demo');
+      
+      if (userRole === 'student') {
+        return getMockOrdersByStudent(userId);
+      } else if (userRole === 'shopkeeper') {
+        return getMockOrdersByShopkeeper(userId);
+      } else if (userRole === 'deliverer') {
+        return getMockOrdersByDeliverer(userId);
+      }
+      
       return [];
     }
   }
@@ -87,6 +135,16 @@ export const updateOrderStatus = createAsyncThunk(
         updatedAt: new Date().toISOString(),
       };
       
+      // Update in mock storage
+      const orderIndex = mockOrdersStorage.findIndex(order => order.id === orderId);
+      if (orderIndex !== -1) {
+        mockOrdersStorage[orderIndex] = {
+          ...mockOrdersStorage[orderIndex],
+          status,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      
       // Still emit socket event for real-time updates
       const socket = socketService.socket;
       if (socket && socketService.isConnected()) {
@@ -103,11 +161,13 @@ export const fetchShopkeeperOrders = createAsyncThunk(
   async (shopkeeperId, { rejectWithValue }) => {
     try {
       const response = await api.get(`/orders/shopkeeper/${shopkeeperId}`);
-      return response;
+      return normalizeOrdersPayload(response);
     } catch (error) {
-      // API call failed, return empty array for demo
-      console.log('API call failed, returning empty shopkeeper orders for demo');
-      return [];
+      // API call failed, return orders from mock storage for demo
+      console.log('API call failed, returning mock shopkeeper orders for demo');
+      const orders = getMockOrdersByShopkeeper(shopkeeperId);
+      console.log('Found orders for shopkeeper', shopkeeperId, ':', orders);
+      return orders;
     }
   }
 );
@@ -135,6 +195,17 @@ export const acceptOrder = createAsyncThunk(
         status: ORDER_STATUS.PICKED,
         updatedAt: new Date().toISOString(),
       };
+      
+      // Update in mock storage
+      const orderIndex = mockOrdersStorage.findIndex(order => order.id === orderId);
+      if (orderIndex !== -1) {
+        mockOrdersStorage[orderIndex] = {
+          ...mockOrdersStorage[orderIndex],
+          delivererId,
+          status: ORDER_STATUS.PICKED,
+          updatedAt: new Date().toISOString(),
+        };
+      }
       
       // Still emit socket event for real-time updates
       const socket = socketService.socket;
