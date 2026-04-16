@@ -23,7 +23,8 @@ const OrdersScreen = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState('All');
 
   useEffect(() => {
-    loadOrders();
+    // Don't load orders initially - rely on Redux state from createOrder
+    // Only load on refresh to sync with server
   }, []);
 
   const loadOrders = async () => {
@@ -31,7 +32,7 @@ const OrdersScreen = ({ navigation }) => {
       await dispatch(fetchOrders({ 
         userId: user?.id, 
         userRole: user?.role 
-      })).unwrap();
+      }));
     } catch (error) {
       console.error('Failed to load orders:', error);
     }
@@ -49,7 +50,7 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   const getFilteredOrders = () => {
-    let filtered = orders.filter(order => order.studentId === user?.id);
+    let filtered = orders;
     
     if (selectedFilter !== 'All') {
       filtered = filtered.filter(order => order.status === selectedFilter);
@@ -59,14 +60,12 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   const getStatusCount = (status) => {
-    return orders.filter(order => 
-      order.studentId === user?.id && order.status === status
-    ).length;
+    return orders.filter(order => order.status === status).length;
   };
 
   const renderFilterTabs = () => {
     const filters = [
-      { key: 'All', label: 'All', count: orders.filter(o => o.studentId === user?.id).length },
+      { key: 'All', label: 'All', count: orders.length },
       { key: ORDER_STATUS.PENDING, label: 'Pending', count: getStatusCount(ORDER_STATUS.PENDING) },
       { key: ORDER_STATUS.PREPARING, label: 'Preparing', count: getStatusCount(ORDER_STATUS.PREPARING) },
       { key: ORDER_STATUS.READY, label: 'Ready', count: getStatusCount(ORDER_STATUS.READY) },
@@ -161,7 +160,7 @@ const OrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="My Orders" rightComponent={<Text style={styles.subtitle}>{orders.filter(o => o.studentId === user?.id).length} total orders</Text>} />
+      <Header title="My Orders" rightComponent={<Text style={styles.subtitle}>{orders.length} total orders</Text>} />
 
       {renderFilterTabs()}
 
@@ -172,7 +171,7 @@ const OrdersScreen = ({ navigation }) => {
         }
         contentContainerStyle={styles.ordersContent}
       >
-        {orders.filter(o => o.studentId === user?.id).length === 0 ? (
+        {orders.length === 0 ? (
           renderEmptyState()
         ) : (
           renderOrders()

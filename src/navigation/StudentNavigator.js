@@ -2,7 +2,7 @@ import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { COLORS } from '../constants';
 
 // Student Screens
@@ -63,28 +63,18 @@ const StudentNavigator = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          let fallbackIcon;
 
           if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home';
-            fallbackIcon = '🏠';
+            iconName = 'home';
           } else if (route.name === 'Cart') {
-            iconName = focused ? 'shopping-cart' : 'shopping-cart';
-            fallbackIcon = '🛒';
+            iconName = 'cart';
           } else if (route.name === 'Orders') {
-            iconName = focused ? 'receipt' : 'receipt';
-            fallbackIcon = '📋';
+            iconName = 'receipt';
           } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person';
-            fallbackIcon = '👤';
+            iconName = 'person';
           }
 
-          try {
-            return <Icon name={iconName} size={size} color={color} />;
-          } catch (error) {
-            // Fallback to text icon if vector icon fails
-            return <Text style={{ fontSize: size, color }}>{fallbackIcon}</Text>;
-          }
+          return <Icon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray,

@@ -10,13 +10,19 @@ const api = axios.create({
   },
 });
 
+// Store token externally
+let authToken = null;
+
+export const setAuthToken = (token) => {
+  authToken = token;
+};
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    // Add token from Redux store or AsyncStorage
-    const token = getState()?.auth?.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Add token if available
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
     }
     return config;
   },
@@ -34,7 +40,8 @@ api.interceptors.response.use(
     // Handle common errors
     if (error.response?.status === 401) {
       // Unauthorized - token expired or invalid
-      // Dispatch logout action or navigate to login
+      // Clear token and logout
+      authToken = null;
       console.log('Unauthorized access - logging out');
     }
     
@@ -51,12 +58,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// Helper function to get Redux state (you'll need to implement this)
-const getState = () => {
-  // This would typically come from your Redux store
-  // For now, return null as placeholder
-  return null;
-};
 
 export default api;

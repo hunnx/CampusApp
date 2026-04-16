@@ -47,10 +47,15 @@ const CheckoutScreen = ({ route, navigation }) => {
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
 
+    if (!user || !user.id) {
+      Alert.alert('Error', 'You must be logged in to place an order.');
+      return;
+    }
+
     try {
       const orderData = {
-        studentId: user?.id,
-        studentName: user?.name,
+        studentId: user.id,
+        studentName: user.name,
         shopkeeperId: items[0]?.shopkeeperId || '1', // Use actual shopkeeperId from product, default to '1'
         shopkeeperName: items[0]?.shopkeeperName || 'Campus Shop',
         items: items.map(item => ({
@@ -67,11 +72,25 @@ const CheckoutScreen = ({ route, navigation }) => {
         orderNotes,
       };
 
-      const newOrder = await dispatch(createOrder(orderData)).unwrap();
+      console.log('Placing order with data:', orderData);
       
-      // Navigate to Orders screen
-      navigation.navigate('Orders');
+      const newOrder = await dispatch(createOrder(orderData));
+      
+      console.log('Order created successfully:', newOrder);
+      
+      // Show success message
+      Alert.alert(
+        'Order Placed Successfully!',
+        'Your order has been placed and will be prepared soon.',
+        [
+          {
+            text: 'View Orders',
+            onPress: () => navigation.navigate('Orders')
+          }
+        ]
+      );
     } catch (error) {
+      console.error('Order creation failed:', error);
       Alert.alert('Error', 'Failed to place order. Please try again.');
     }
   };

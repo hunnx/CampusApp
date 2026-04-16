@@ -8,11 +8,14 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../../redux/slices/cartSlice';
 import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
 
 const ProductDetailScreen = ({ route, navigation }) => {
+  const dispatch = useDispatch();
   const { product } = route.params || {};
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(product?.price || 0);
@@ -26,13 +29,20 @@ const ProductDetailScreen = ({ route, navigation }) => {
   };
 
   const handleAddToCart = () => {
-    const cartItem = {
-      ...product,
+    if (!product) return;
+
+    dispatch(addToCart({
+      product: {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        shopkeeperId: product.shopkeeperId || '1',
+        shopkeeperName: product.shopkeeperName || 'Campus Shop',
+      },
       quantity,
-      totalPrice,
-    };
-    
-    // In a real app, this would update Redux state
+    }));
+
     Alert.alert(
       'Added to Cart',
       `${quantity}x ${product.name} added to cart`,

@@ -40,6 +40,8 @@ const OrderCard = ({
   };
 
   const renderOrderItems = () => {
+    if (!order || !order.items) return null;
+    
     return order.items.map((item, index) => (
       <View key={index} style={styles.itemRow}>
         <Text style={styles.itemName} numberOfLines={1}>
@@ -53,7 +55,7 @@ const OrderCard = ({
   };
 
   const renderActions = () => {
-    if (!showActions) return null;
+    if (!showActions || !order) return null;
 
     const actions = [];
 
@@ -108,13 +110,13 @@ const OrderCard = ({
     >
       <View style={styles.header}>
         <View style={styles.orderInfo}>
-          <Text style={styles.orderId}>Order #{order.id.slice(-6)}</Text>
+          <Text style={styles.orderId}>Order #{order?.id?.slice(-6) || 'N/A'}</Text>
           <Text style={styles.orderTime}>
-            {new Date(order.createdAt).toLocaleTimeString()}
+            {order?.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}
           </Text>
         </View>
-        <View style={[styles.statusContainer, { backgroundColor: getStatusColor(order.status) }]}>
-          <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
+        <View style={[styles.statusContainer, { backgroundColor: getStatusColor(order?.status) }]}>
+          <Text style={styles.statusText}>{getStatusText(order?.status || 'unknown')}</Text>
         </View>
       </View>
 
@@ -126,12 +128,12 @@ const OrderCard = ({
         <View style={styles.footer}>
           <View style={styles.locationInfo}>
             <Text style={styles.locationText} numberOfLines={1}>
-              📍 {order.pickupLocation} → {order.dropLocation}
+              📍 {order?.pickupLocation || 'N/A'} → {order?.dropLocation || 'N/A'}
             </Text>
           </View>
           <View style={styles.priceInfo}>
-            <Text style={styles.totalAmount}>PKR {order.totalAmount}</Text>
-            <Text style={styles.deliveryCharge}>+ PKR {order.deliveryCharge} delivery</Text>
+            <Text style={styles.totalAmount}>PKR {order?.totalAmount || 0}</Text>
+            <Text style={styles.deliveryCharge}>+ PKR {order?.deliveryCharge || 0} delivery</Text>
           </View>
         </View>
       </View>

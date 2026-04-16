@@ -26,26 +26,26 @@ const OrderTrackingScreen = ({ route, navigation }) => {
     loadOrderDetails();
   }, [orderId, orders]);
 
-  const loadOrderDetails = async () => {
+  const loadOrderDetails = () => {
     console.log('OrderTrackingScreen - Loading order details for orderId:', orderId);
     console.log('OrderTrackingScreen - Current orders:', orders);
-    try {
-      await dispatch(fetchOrders({ 
-        userId: user?.id, 
-        userRole: user?.role 
-      })).unwrap();
-      
-      const foundOrder = orders.find(o => o.id === orderId);
-      console.log('OrderTrackingScreen - Found order:', foundOrder);
-      setOrder(foundOrder);
-    } catch (error) {
-      console.error('Failed to load order details:', error);
-    }
+    
+    // Find order from existing Redux state instead of fetching
+    const foundOrder = orders.find(o => o.id === orderId);
+    console.log('OrderTrackingScreen - Found order:', foundOrder);
+    setOrder(foundOrder);
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadOrderDetails();
+    try {
+      await dispatch(fetchOrders({ 
+        userId: user?.id, 
+        userRole: user?.role 
+      }));
+    } catch (error) {
+      console.error('Failed to refresh orders:', error);
+    }
     setRefreshing(false);
   };
 
@@ -198,7 +198,7 @@ const OrderTrackingScreen = ({ route, navigation }) => {
   };
 
   const renderOrderItems = () => {
-    if (!order) return null;
+    if (!order || !order.items) return null;
 
     return (
       <View style={styles.orderItems}>
@@ -266,8 +266,14 @@ const OrderTrackingScreen = ({ route, navigation }) => {
   if (!order) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading order details...</Text>
+        <Text style={styles.loadingText}>Order not found</Text>
         <Text style={styles.errorText}>Order ID: {orderId}</Text>
+        <Text style={styles.errorText}>Available orders: {orders.length}</Text>
+        <Button 
+          title="Go Back" 
+          onPress={() => navigation.goBack()} 
+          style={{ marginTop: SIZES.padding }}
+        />
       </View>
     );
   }
@@ -277,7 +283,7 @@ const OrderTrackingScreen = ({ route, navigation }) => {
       <Header title="Order Tracking" onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-          <Text style={styles.statusText}>{order.status.toUpperCase()}</Text>
+          <Text style={styles.statusText}>{order.status?.toUpperCase() || 'UNKNOWN'}</Text>
         </View>
 
         {renderTimeline()}

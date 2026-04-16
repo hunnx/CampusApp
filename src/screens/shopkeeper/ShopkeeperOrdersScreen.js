@@ -9,7 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchOrders, updateOrderStatus } from '../../redux/slices/orderSlice';
+import { fetchShopkeeperOrders, updateOrderStatus, addNewOrder } from '../../redux/slices/orderSlice';
+import socketService from '../../services/socket';
 import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
@@ -17,21 +18,39 @@ import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 const ShopkeeperOrdersScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { orders, isLoading } = useSelector(state => state.orders);
-  const { user } = useSelector(state => state.auth);
+  const { user, token } = useSelector(state => state.auth);
   
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('All');
 
   useEffect(() => {
     loadOrders();
-  }, []);
+    
+    // Listen for new orders (socket is already connected in login)
+    socketService.onNewOrder((orderData) => {
+      if (orderData.shopkeeperId === user.id) {
+        dispatch(addNewOrder(orderData));
+        Alert.alert('New Order!', 'A new order has been placed for your shop.');
+      }
+    });
+    
+    // Listen for order status updates
+    socketService.onOrderStatusUpdate((updateData) => {
+      // Handle real-time status updates if needed
+      console.log('Order status updated:', updateData);
+    });
+    
+    return () => {
+      // Cleanup socket listeners
+      // Note: Don't disconnect socket here as it might be used by other screens
+    };
+  }, [user]);
 
   const loadOrders = async () => {
     try {
-      await dispatch(fetchOrders({ 
-        userId: user?.id, 
-        userRole: user?.role 
-      })).unwrap();
+      if (user?.id) {
+        await dispatch(fetchShopkeeperOrders(user.id));
+      }
     } catch (error) {
       console.error('Failed to load orders:', error);
     }
@@ -48,7 +67,7 @@ const ShopkeeperOrdersScreen = ({ navigation }) => {
       await dispatch(updateOrderStatus({ 
         orderId, 
         status: newStatus 
-      })).unwrap();
+      }));
       
       Alert.alert(
         'Success',
@@ -65,7 +84,7 @@ const ShopkeeperOrdersScreen = ({ navigation }) => {
   };
 
   const getFilteredOrders = () => {
-    let filtered = orders.filter(order => order.shopkeeperId === user?.id);
+    let filtered = orders;
     
     if (selectedFilter !== 'All') {
       filtered = filtered.filter(order => order.status === selectedFilter);
@@ -75,14 +94,12 @@ const ShopkeeperOrdersScreen = ({ navigation }) => {
   };
 
   const getStatusCount = (status) => {
-    return orders.filter(order => 
-      order.shopkeeperId === user?.id && order.status === status
-    ).length;
+    return orders.filter(order => order.status === status).length;
   };
 
   const renderFilterTabs = () => {
     const filters = [
-      { key: 'All', label: 'All', count: orders.filter(o => o.shopkeeperId === user?.id).length },
+      { key: 'All', label: 'All', count: orders.length },
       { key: ORDER_STATUS.PENDING, label: 'Pending', count: getStatusCount(ORDER_STATUS.PENDING) },
       { key: ORDER_STATUS.PREPARING, label: 'Preparing', count: getStatusCount(ORDER_STATUS.PREPARING) },
       { key: ORDER_STATUS.READY, label: 'Ready', count: getStatusCount(ORDER_STATUS.READY) },
@@ -159,7 +176,7 @@ const ShopkeeperOrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="Shop Orders" rightComponent={<Text style={styles.subtitle}>{orders.filter(o => o.shopkeeperId === user?.id).length} orders</Text>} />
+      <Header title="Shop Orders" rightComponent={<Text style={styles.subtitle}>{orders.length} orders</Text>} />
 
       {renderFilterTabs()}
 

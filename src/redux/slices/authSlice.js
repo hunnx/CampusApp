@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { USER_ROLES } from '../../constants';
+import { setAuthToken } from '../../services/api';
+import socketService from '../../services/socket';
 
 // Async thunks
 export const loginUser = createAsyncThunk(
@@ -19,6 +21,21 @@ export const loginUser = createAsyncThunk(
         role: credentials.role || USER_ROLES.STUDENT,
         token: 'mock-jwt-token',
       };
+      
+      // Set token in API service
+      setAuthToken(mockUser.token);
+      
+      // Connect to socket for real-time updates
+      socketService.connect(mockUser.token);
+      
+      // Join appropriate room based on user role
+      if (mockUser.role === USER_ROLES.SHOPKEEPER) {
+        socketService.joinShopkeeperRoom(mockUser.id);
+      } else if (mockUser.role === USER_ROLES.DELIVERER) {
+        socketService.joinDelivererRoom(mockUser.id);
+      } else if (mockUser.role === USER_ROLES.STUDENT) {
+        socketService.joinStudentRoom(mockUser.id);
+      }
       
       return mockUser;
     } catch (error) {
@@ -65,6 +82,10 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      // Clear token from API service
+      setAuthToken(null);
+      // Disconnect socket
+      socketService.disconnect();
     },
     clearError: (state) => {
       state.error = null;
