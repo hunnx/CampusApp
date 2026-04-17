@@ -118,7 +118,7 @@ const AvailableOrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="Available Orders" rightComponent={<Text style={styles.subtitle}>{getAvailableOrders().length} orders</Text>} />
+      <Header title="Available Orders" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{getAvailableOrders().length} orders</Text>} />
 
       {/* Stats shown as list header; FlatList handles refreshing and empty state */}
       <FlatList

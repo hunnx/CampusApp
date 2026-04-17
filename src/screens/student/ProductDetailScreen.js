@@ -219,20 +219,6 @@ const styles = StyleSheet.create({
   productEmoji: {
     fontSize: 72,
   },
-  shopInfo: {
-    position: 'absolute',
-    bottom: SIZES.padding,
-    left: SIZES.padding,
-    right: SIZES.padding,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: SIZES.base,
-    borderRadius: SIZES.radius,
-  },
-  shopName: {
-    color: COLORS.white,
-    fontSize: SIZES.font,
-    fontWeight: '600',
-  },
   detailsSection: {
     backgroundColor: COLORS.white,
     padding: SIZES.padding,

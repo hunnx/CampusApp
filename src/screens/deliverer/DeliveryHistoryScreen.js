@@ -228,7 +228,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="Delivery History" rightComponent={<Text style={styles.subtitle}>{getCompletedOrders().length} completed</Text>} />
+      <Header title="Delivery History" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{getCompletedOrders().length} completed</Text>} />
 
       {renderOrders()}
     </View>

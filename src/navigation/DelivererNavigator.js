@@ -36,6 +36,16 @@ const ActiveDeliveryStack = () => {
   );
 };
 
+// Delivery History Stack Navigator
+const HistoryStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="History" component={DeliveryHistoryScreen} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+    </Stack.Navigator>
+  );
+};
+
 const DelivererNavigator = () => {
   return (
     <Tab.Navigator
@@ -91,7 +101,7 @@ const DelivererNavigator = () => {
       />
       <Tab.Screen 
         name="History" 
-        component={DeliveryHistoryScreen}
+        component={HistoryStack}
         options={{ tabBarLabel: 'History' }}
       />
       <Tab.Screen 

@@ -99,7 +99,7 @@ const ActiveDeliveryScreen = ({ navigation }) => {
         </Text>
         <Button
           title="View Available Orders"
-          onPress={() => navigation.navigate('Available')}
+          onPress={() => navigation.jumpTo('Available')}
           style={styles.availableButton}
         />
       </View>
@@ -171,7 +171,7 @@ const ActiveDeliveryScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="Active Delivery" rightComponent={<Text style={styles.subtitle}>{getActiveOrders().length} in progress</Text>} />
+      <Header title="Active Delivery" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{getActiveOrders().length} in progress</Text>} />
 
       <FlatList
         data={getActiveOrders()}
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: SIZES.font - 1,
-    color: COLORS.gray,
+    color: COLORS.white,
     marginTop: SIZES.base / 2,
   },
   statsBar: {

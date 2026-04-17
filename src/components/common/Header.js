@@ -33,14 +33,14 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: 12,
   },
   backArrow: {
-    fontSize: 20,
+    fontSize: 24,
     color: COLORS.white,
     fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 24,
   },
   backButtonPlaceholder: {
     width: 36,

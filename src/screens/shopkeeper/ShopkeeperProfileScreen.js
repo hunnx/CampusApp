@@ -266,7 +266,7 @@ const ShopkeeperProfileScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="My Profile" />
+      <Header title="My Profile" onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
       {renderProfileHeader()}
       {renderStatsSection()}

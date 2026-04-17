@@ -175,7 +175,7 @@ const OrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="My Orders" rightComponent={<Text style={styles.subtitle}>{orders.length} total orders</Text>} />
+      <Header title="My Orders" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{orders.length} total orders</Text>} />
 
       <FlatList
         data={getFilteredOrders()}
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: SIZES.font - 1,
-    color: COLORS.gray,
+    color: COLORS.white,
     marginTop: SIZES.base / 2,
   },
   filterTabs: {
