@@ -304,9 +304,12 @@ const orderSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        const index = state.orders.findIndex(order => order.id === action.payload.id);
+        const index = state.orders.findIndex(order => String(order.id) === String(action.payload.id));
         if (index !== -1) {
           state.orders[index] = { ...state.orders[index], ...action.payload };
+        } else {
+          // upsert if not found
+          state.orders.unshift(action.payload);
         }
         state.error = null;
       })
@@ -321,9 +324,12 @@ const orderSlice = createSlice({
       })
       .addCase(acceptOrder.fulfilled, (state, action) => {
         state.isLoading = false;
-        const index = state.orders.findIndex(order => order.id === action.payload.id);
+        const index = state.orders.findIndex(order => String(order.id) === String(action.payload.id));
         if (index !== -1) {
           state.orders[index] = { ...state.orders[index], ...action.payload };
+        } else {
+          // upsert: add accepted order if it wasn't present
+          state.orders.unshift(action.payload);
         }
         state.error = null;
       })
