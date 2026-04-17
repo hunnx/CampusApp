@@ -184,20 +184,6 @@ const DeliveryHistoryScreen = ({ navigation }) => {
   const renderOrders = () => {
     const filteredOrders = getFilteredOrders();
 
-    if (filteredOrders.length === 0) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📊</Text>
-          <Text style={styles.emptyText}>No Delivery History</Text>
-          <Text style={styles.emptySubtext}>
-            {selectedFilter === 'All' 
-              ? 'You haven\'t completed any deliveries yet' 
-              : `No deliveries found for ${selectedFilter}`}
-          </Text>
-        </View>
-      );
-    }
-
     return (
       <FlatList
         data={filteredOrders}
@@ -212,9 +198,19 @@ const DeliveryHistoryScreen = ({ navigation }) => {
             style={styles.orderCard}
           />
         )}
-        contentContainerStyle={styles.ordersContent}
+        contentContainerStyle={[
+          styles.ordersContent,
+          // Center empty state when no orders
+          filteredOrders.length === 0 && { flex: 1 },
+        ]}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        ListHeaderComponent={
+          <View>
+            {renderStatsBar()}
+            {renderFilterTabs()}
+          </View>
+        }
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📊</Text>
@@ -234,18 +230,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Header title="Delivery History" rightComponent={<Text style={styles.subtitle}>{getCompletedOrders().length} completed</Text>} />
 
-      {renderStatsBar()}
-      {renderFilterTabs()}
-
-      <ScrollView
-        style={styles.ordersContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.ordersContent}
-      >
-        {renderOrders()}
-      </ScrollView>
+      {renderOrders()}
     </View>
   );
 };

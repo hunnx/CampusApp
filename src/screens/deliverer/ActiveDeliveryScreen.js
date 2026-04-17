@@ -140,10 +140,6 @@ const ActiveDeliveryScreen = ({ navigation }) => {
   const renderOrders = () => {
     const activeOrders = getActiveOrders();
 
-    if (activeOrders.length === 0) {
-      return renderEmptyState();
-    }
-
     return (
       <FlatList
         data={activeOrders}
@@ -161,7 +157,11 @@ const ActiveDeliveryScreen = ({ navigation }) => {
             {renderOrderActions(item)}
           </View>
         )}
-        contentContainerStyle={styles.ordersContent}
+        contentContainerStyle={[
+          styles.ordersContent,
+          // Center empty state when no orders
+          activeOrders.length === 0 && { flex: 1 },
+        ]}
         refreshing={refreshing}
         onRefresh={onRefresh}
         ListEmptyComponent={renderEmptyState}
@@ -173,17 +173,32 @@ const ActiveDeliveryScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Header title="Active Delivery" rightComponent={<Text style={styles.subtitle}>{getActiveOrders().length} in progress</Text>} />
 
-      {renderStatsBar()}
-
-      <ScrollView
-        style={styles.ordersContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.ordersContent}
-      >
-        {renderOrders()}
-      </ScrollView>
+      <FlatList
+        data={getActiveOrders()}
+        keyExtractor={(item) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        renderItem={({ item }) => (
+          <View style={styles.orderContainer}>
+            <OrderCard
+              order={item}
+              onPress={handleOrderPress}
+              showActions={false}
+              style={styles.orderCard}
+            />
+            {renderOrderActions(item)}
+          </View>
+        )}
+        contentContainerStyle={[
+          styles.ordersContent,
+          // Center empty state when no orders
+          getActiveOrders().length === 0 && { flex: 1 },
+        ]}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListHeaderComponent={renderStatsBar}
+        ListEmptyComponent={renderEmptyState}
+      />
     </View>
   );
 };

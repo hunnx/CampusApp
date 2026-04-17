@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchOrders } from '../../redux/slices/orderSlice';
 import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
@@ -23,10 +24,12 @@ const OrdersScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('All');
 
-  useEffect(() => {
-    // Don't load orders initially - rely on Redux state from createOrder
-    // Only load on refresh to sync with server
-  }, []);
+  // Load orders when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadOrders();
+    }, [user?.id])
+  );
 
   const loadOrders = async () => {
     try {
@@ -174,21 +177,29 @@ const OrdersScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Header title="My Orders" rightComponent={<Text style={styles.subtitle}>{orders.length} total orders</Text>} />
 
-      {renderFilterTabs()}
-
-      <ScrollView
-        style={styles.ordersContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.ordersContent}
-      >
-        {orders.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          renderOrders()
+      <FlatList
+        data={getFilteredOrders()}
+        keyExtractor={(item) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        renderItem={({ item }) => (
+          <OrderCard
+            order={item}
+            onPress={handleOrderPress}
+            showActions={false}
+            style={styles.orderCard}
+          />
         )}
-      </ScrollView>
+        contentContainerStyle={[
+          styles.ordersContent,
+          // Center empty state when no orders
+          orders.length === 0 && { flex: 1 },
+        ]}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListHeaderComponent={renderFilterTabs}
+        ListEmptyComponent={renderEmptyState}
+      />
     </View>
   );
 };

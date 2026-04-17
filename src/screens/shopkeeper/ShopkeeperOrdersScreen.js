@@ -151,18 +151,6 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
   const renderOrders = () => {
     const filteredOrders = getFilteredOrders();
 
-    if (filteredOrders.length === 0) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            {selectedFilter === 'All' 
-              ? 'No orders yet' 
-              : `No ${selectedFilter.toLowerCase()} orders`}
-          </Text>
-        </View>
-      );
-    }
-
     return (
       <FlatList
         data={filteredOrders}
@@ -178,9 +166,14 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
             style={styles.orderCard}
           />
         )}
-        contentContainerStyle={styles.ordersContent}
+        contentContainerStyle={[
+          styles.ordersContent,
+          // Center empty state when no orders
+          filteredOrders.length === 0 && { flex: 1 },
+        ]}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        ListHeaderComponent={renderFilterTabs}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
@@ -196,17 +189,7 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <Header title="Shop Orders" rightComponent={<Text style={styles.subtitle}>{orders.length} orders</Text>} />
 
-      {renderFilterTabs()}
-
-      <ScrollView
-        style={styles.ordersContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.ordersContent}
-      >
-        {renderOrders()}
-      </ScrollView>
+      {renderOrders()}
     </View>
   );
 };
