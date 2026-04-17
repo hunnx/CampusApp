@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../../redux/slices/orderSlice';
+import { clearCart } from '../../redux/slices/cartSlice';
 import Header from '../../components/common/Header';
 import Input from '../../components/common/Input';
 import Button from '../../components/buttons/Button';
@@ -77,6 +78,9 @@ const CheckoutScreen = ({ route, navigation }) => {
       const newOrder = await dispatch(createOrder(orderData));
       
       console.log('Order created successfully:', newOrder);
+      
+      // Clear cart after successful order placement
+      dispatch(clearCart());
       
       // Show success message
       Alert.alert(

@@ -241,7 +241,10 @@ const StudentProfileScreen = ({ navigation }) => {
       <View style={styles.quickActions}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
-        <TouchableOpacity style={styles.actionItem}>
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => navigation.navigate('Orders')}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionIconText}>📋</Text>
           </View>
@@ -252,7 +255,10 @@ const StudentProfileScreen = ({ navigation }) => {
           <Text style={styles.actionArrow}>{'>'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionItem}>
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => Alert.alert('Payment Methods', 'Payment methods feature coming soon!')}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionIconText}>💳</Text>
           </View>
@@ -263,7 +269,10 @@ const StudentProfileScreen = ({ navigation }) => {
           <Text style={styles.actionArrow}>{'>'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionItem}>
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => Alert.alert('Delivery Addresses', 'Delivery addresses feature coming soon!')}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionIconText}>📍</Text>
           </View>
@@ -274,7 +283,10 @@ const StudentProfileScreen = ({ navigation }) => {
           <Text style={styles.actionArrow}>{'>'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionItem}>
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => Alert.alert('Notifications', 'Notifications settings feature coming soon!')}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionIconText}>🔔</Text>
           </View>
@@ -285,7 +297,10 @@ const StudentProfileScreen = ({ navigation }) => {
           <Text style={styles.actionArrow}>{'>'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionItem}>
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => Alert.alert('Help & Support', 'For support, please contact: support@campusapp.com')}
+        >
           <View style={styles.actionIcon}>
             <Text style={styles.actionIconText}>❓</Text>
           </View>

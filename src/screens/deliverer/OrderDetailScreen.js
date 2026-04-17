@@ -155,12 +155,6 @@ const OrderDetailScreen = ({ route, navigation }) => {
           </View>
           <Text style={styles.locationAddress}>{order.dropLocation}</Text>
         </View>
-        
-        <Button
-          title="View on Map"
-          onPress={handleNavigateToMap}
-          style={styles.mapButton}
-        />
       </View>
     );
   };
