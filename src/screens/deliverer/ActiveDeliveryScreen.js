@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Alert,
 } from 'react-native';
@@ -137,22 +137,34 @@ const ActiveDeliveryScreen = ({ navigation }) => {
 
   const renderOrders = () => {
     const activeOrders = getActiveOrders();
-    
+
     if (activeOrders.length === 0) {
       return renderEmptyState();
     }
 
-    return activeOrders.map(order => (
-      <View key={order.id} style={styles.orderContainer}>
-        <OrderCard
-          order={order}
-          onPress={handleOrderPress}
-          showActions={false}
-          style={styles.orderCard}
-        />
-        {renderOrderActions(order)}
-      </View>
-    ));
+    return (
+      <FlatList
+        data={activeOrders}
+        keyExtractor={(item) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        renderItem={({ item }) => (
+          <View style={styles.orderContainer}>
+            <OrderCard
+              order={item}
+              onPress={handleOrderPress}
+              showActions={false}
+              style={styles.orderCard}
+            />
+            {renderOrderActions(item)}
+          </View>
+        )}
+        contentContainerStyle={styles.ordersContent}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={renderEmptyState}
+      />
+    );
   };
 
   return (
@@ -221,9 +233,17 @@ const styles = StyleSheet.create({
   },
   ordersContent: {
     padding: SIZES.base,
+    paddingBottom: SIZES.padding * 4,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: SIZES.base,
   },
   orderContainer: {
+    flex: 1,
+    marginHorizontal: SIZES.base / 2,
     marginBottom: SIZES.base,
+    minWidth: 0,
   },
   orderCard: {
     marginBottom: SIZES.base,

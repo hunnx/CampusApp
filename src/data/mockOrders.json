@@ -1,0 +1,118 @@
+{
+  "orders": [
+    {
+      "id": "order_001",
+      "studentId": "student1",
+      "studentName": "John Doe",
+      "shopkeeperId": "1",
+      "shopkeeperName": "Campus Shop",
+      "status": "pending",
+      "items": [
+        {
+          "productId": "1",
+          "name": "Burger",
+          "price": 150,
+          "quantity": 2
+        },
+        {
+          "productId": "2",
+          "name": "Fries",
+          "price": 80,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 380,
+      "deliveryCharge": 100,
+      "pickupLocation": "Campus Shop",
+      "dropLocation": "Hostel A, Room 101",
+      "contactNumber": "1234567890",
+      "orderNotes": "Extra ketchup please",
+      "createdAt": "2026-04-16T10:00:00Z",
+      "updatedAt": "2026-04-16T10:00:00Z"
+    },
+    {
+      "id": "order_002",
+      "studentId": "student2",
+      "studentName": "Jane Smith",
+      "shopkeeperId": "1",
+      "shopkeeperName": "Campus Shop",
+      "status": "preparing",
+      "items": [
+        {
+          "productId": "3",
+          "name": "Pizza",
+          "price": 400,
+          "quantity": 1
+        },
+        {
+          "productId": "4",
+          "name": "Coke",
+          "price": 50,
+          "quantity": 2
+        }
+      ],
+      "totalAmount": 500,
+      "deliveryCharge": 100,
+      "pickupLocation": "Campus Shop",
+      "dropLocation": "Hostel B, Room 205",
+      "contactNumber": "9876543210",
+      "orderNotes": "No onions",
+      "createdAt": "2026-04-16T09:00:00Z",
+      "updatedAt": "2026-04-16T09:30:00Z"
+    },
+    {
+      "id": "order_003",
+      "studentId": "student3",
+      "studentName": "Mike Johnson",
+      "shopkeeperId": "1",
+      "shopkeeperName": "Campus Shop",
+      "status": "ready",
+      "items": [
+        {
+          "productId": "5",
+          "name": "Sandwich",
+          "price": 120,
+          "quantity": 3
+        }
+      ],
+      "totalAmount": 360,
+      "deliveryCharge": 100,
+      "pickupLocation": "Campus Shop",
+      "dropLocation": "Library, Study Room 3",
+      "contactNumber": "5555555555",
+      "orderNotes": "",
+      "createdAt": "2026-04-16T08:00:00Z",
+      "updatedAt": "2026-04-16T08:30:00Z"
+    },
+    {
+      "id": "order_004",
+      "studentId": "student4",
+      "studentName": "Sarah Williams",
+      "shopkeeperId": "1",
+      "shopkeeperName": "Campus Shop",
+      "status": "completed",
+      "items": [
+        {
+          "productId": "6",
+          "name": "Salad",
+          "price": 100,
+          "quantity": 1
+        },
+        {
+          "productId": "7",
+          "name": "Juice",
+          "price": 60,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 160,
+      "deliveryCharge": 100,
+      "pickupLocation": "Campus Shop",
+      "dropLocation": "Main Gate, Reception",
+      "contactNumber": "1112223333",
+      "orderNotes": "Dressing on side",
+      "createdAt": "2026-04-15T10:00:00Z",
+      "updatedAt": "2026-04-15T14:00:00Z"
+    }
+  ]
+}

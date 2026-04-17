@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
   Alert,
@@ -117,21 +117,32 @@ const AvailableOrdersScreen = ({ navigation }) => {
 
   const renderOrders = () => {
     const availableOrders = getAvailableOrders();
-    
+
     if (availableOrders.length === 0) {
       return renderEmptyState();
     }
 
-    return availableOrders.map(order => (
-      <OrderCard
-        key={order.id}
-        order={order}
-        onPress={handleOrderPress}
-        onAccept={handleAcceptOrder}
-        showActions={true}
-        style={styles.orderCard}
+    return (
+      <FlatList
+        data={availableOrders}
+        keyExtractor={(item) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        renderItem={({ item }) => (
+          <OrderCard
+            order={item}
+            onPress={handleOrderPress}
+            onAccept={handleAcceptOrder}
+            showActions={true}
+            style={styles.orderCard}
+          />
+        )}
+        contentContainerStyle={styles.ordersContent}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={renderEmptyState}
       />
-    ));
+    );
   };
 
   return (
@@ -200,9 +211,17 @@ const styles = StyleSheet.create({
   },
   ordersContent: {
     padding: SIZES.base,
+    paddingBottom: SIZES.padding * 4,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: SIZES.base,
   },
   orderCard: {
+    flex: 1,
+    marginHorizontal: SIZES.base / 2,
     marginBottom: SIZES.base,
+    minWidth: 0,
   },
   emptyContainer: {
     flex: 1,

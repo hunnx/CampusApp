@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
   Alert,
@@ -116,7 +117,7 @@ const OrdersScreen = ({ navigation }) => {
 
   const renderOrders = () => {
     const filteredOrders = getFilteredOrders();
-    
+
     if (filteredOrders.length === 0) {
       return (
         <View style={styles.emptyContainer}>
@@ -129,15 +130,26 @@ const OrdersScreen = ({ navigation }) => {
       );
     }
 
-    return filteredOrders.map(order => (
-      <OrderCard
-        key={order.id}
-        order={order}
-        onPress={handleOrderPress}
-        showActions={false}
-        style={styles.orderCard}
+    return (
+      <FlatList
+        data={filteredOrders}
+        keyExtractor={(item) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        renderItem={({ item }) => (
+          <OrderCard
+            order={item}
+            onPress={handleOrderPress}
+            showActions={false}
+            style={styles.orderCard}
+          />
+        )}
+        contentContainerStyle={styles.ordersContent}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={renderEmptyState}
       />
-    ));
+    );
   };
 
   const renderEmptyState = () => {
@@ -256,9 +268,17 @@ const styles = StyleSheet.create({
   },
   ordersContent: {
     padding: SIZES.base,
+    paddingBottom: SIZES.padding * 4,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: SIZES.base,
   },
   orderCard: {
+    flex: 1,
+    marginHorizontal: SIZES.base / 2,
     marginBottom: SIZES.base,
+    minWidth: 0,
   },
   emptyContainer: {
     flex: 1,

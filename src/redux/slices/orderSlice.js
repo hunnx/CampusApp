@@ -5,6 +5,17 @@ import socketService from '../../services/socket';
 
 // Mock storage for orders (in a real app, this would be a database)
 let mockOrdersStorage = [];
+// Initialize mock storage from static JSON so orders persist across screens during development
+try {
+  // require here so bundler includes the JSON file
+  const mockOrdersJson = require('../../data/mockOrders.json');
+  if (mockOrdersJson && Array.isArray(mockOrdersJson.orders)) {
+    mockOrdersStorage = mockOrdersJson.orders;
+  }
+} catch (err) {
+  console.log('No mockOrders.json found or failed to load:', err.message);
+}
+console.log(`✅ mockOrdersStorage initialized with ${mockOrdersStorage.length} orders`);
 
 const getMockOrdersByShopkeeper = (shopkeeperId) => {
   return mockOrdersStorage.filter(order => order.shopkeeperId === shopkeeperId);
@@ -160,8 +171,21 @@ export const fetchShopkeeperOrders = createAsyncThunk(
   'orders/fetchShopkeeperOrders',
   async (shopkeeperId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/orders/shopkeeper/${shopkeeperId}`);
-      return normalizeOrdersPayload(response);
+      // Request mock/shopkeeper orders endpoint (mockApi provides static data)
+      const response = await api.get(`/orders/shopkeeper`);
+      const payload = normalizeOrdersPayload(response);
+      // If the mock returns a wrapped object (e.g., { success: true, data: [...] }), normalize will handle it.
+      // Filter by shopkeeperId so this endpoint remains compatible with a future backend.
+      let filtered = Array.isArray(payload)
+        ? payload.filter(order => String(order.shopkeeperId) === String(shopkeeperId))
+        : [];
+
+      // If nothing matched (e.g., user logged in with different id), fall back to mock storage
+      if ((!filtered || filtered.length === 0) && mockOrdersStorage.length > 0) {
+        filtered = mockOrdersStorage.filter(o => String(o.shopkeeperId) === String(shopkeeperId) || String(o.shopkeeperId) === '1');
+      }
+
+      return filtered;
     } catch (error) {
       // API call failed, return orders from mock storage for demo
       console.log('API call failed, returning mock shopkeeper orders for demo');
@@ -221,7 +245,7 @@ export const acceptOrder = createAsyncThunk(
 const orderSlice = createSlice({
   name: 'orders',
   initialState: {
-    orders: [],
+    orders: mockOrdersStorage.slice(),
     isLoading: false,
     error: null,
   },
@@ -314,7 +338,10 @@ const orderSlice = createSlice({
       })
       .addCase(fetchShopkeeperOrders.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.orders = action.payload;
+        // Only replace orders if API returned data; keep existing static mocks otherwise
+        if (Array.isArray(action.payload) && action.payload.length > 0) {
+          state.orders = action.payload;
+        }
         state.error = null;
       })
       .addCase(fetchShopkeeperOrders.rejected, (state, action) => {

@@ -113,7 +113,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         break;
       case 'orders':
         // Navigate to Orders Screen
-        navigation.navigate('ShopkeeperOrders');
+        navigation.navigate('Orders', { screen: 'ShopkeeperOrders' });
         break;
       case 'categories':
         // Navigate to Categories Screen (if exists)
@@ -121,7 +121,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         break;
       case 'completed':
         // Navigate to Orders Screen with completed filter
-        navigation.navigate('ShopkeeperOrders', { filter: ORDER_STATUS.COMPLETED });
+        navigation.navigate('Orders', { screen: 'ShopkeeperOrders', params: { filter: ORDER_STATUS.COMPLETED } });
         break;
       default:
         Alert.alert('Card Pressed', `You pressed ${cardType}`);
@@ -193,7 +193,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
             <Text style={styles.actionText}>Add New Product</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('ShopkeeperOrders')}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Orders', { screen: 'ShopkeeperOrders' })}>
             <Text style={styles.actionIcon}>📋</Text>
             <Text style={styles.actionText}>View Orders</Text>
           </TouchableOpacity>
@@ -208,7 +208,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         <View style={styles.recentOrders}>
           <View style={styles.recentOrdersHeader}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('ShopkeeperOrders')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Orders', { screen: 'ShopkeeperOrders' })}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -217,7 +217,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
             <TouchableOpacity 
               key={order.id} 
               style={styles.orderItem}
-              onPress={() => navigation.navigate('ShopkeeperOrders')}
+              onPress={() => navigation.navigate('Orders', { screen: 'ShopkeeperOrders' })}
             >
               <View style={styles.orderInfo}>
                 <Text style={styles.orderId}>Order #{String(order.id).slice(-6)}</Text>

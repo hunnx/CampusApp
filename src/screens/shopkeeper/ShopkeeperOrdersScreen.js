@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
   Alert,
@@ -149,7 +150,7 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
 
   const renderOrders = () => {
     const filteredOrders = getFilteredOrders();
-    
+
     if (filteredOrders.length === 0) {
       return (
         <View style={styles.emptyContainer}>
@@ -162,16 +163,33 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
       );
     }
 
-    return filteredOrders.map(order => (
-      <OrderCard
-        key={order.id}
-        order={order}
-        onPress={handleOrderPress}
-        showActions={true}
-        onStatusChange={handleStatusChange}
-        style={styles.orderCard}
+    return (
+      <FlatList
+        data={filteredOrders}
+        keyExtractor={(item) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        renderItem={({ item }) => (
+          <OrderCard
+            order={item}
+            onPress={handleOrderPress}
+            showActions={true}
+            onStatusChange={handleStatusChange}
+            style={styles.orderCard}
+          />
+        )}
+        contentContainerStyle={styles.ordersContent}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              {selectedFilter === 'All' ? 'No orders yet' : `No ${selectedFilter.toLowerCase()} orders`}
+            </Text>
+          </View>
+        )}
       />
-    ));
+    );
   };
 
   return (
@@ -268,9 +286,17 @@ const styles = StyleSheet.create({
   },
   ordersContent: {
     padding: SIZES.base,
+    paddingBottom: SIZES.padding * 4,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: SIZES.base,
   },
   orderCard: {
+    flex: 1,
+    marginHorizontal: SIZES.base / 2,
     marginBottom: SIZES.base,
+    minWidth: 0,
   },
   emptyContainer: {
     flex: 1,
