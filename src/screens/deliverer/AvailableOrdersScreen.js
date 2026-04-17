@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  RefreshControl,
   TouchableOpacity,
   Alert,
 } from 'react-native';
@@ -115,16 +114,15 @@ const AvailableOrdersScreen = ({ navigation }) => {
     );
   };
 
-  const renderOrders = () => {
-    const availableOrders = getAvailableOrders();
+  // We'll render the orders directly with FlatList in the main return
 
-    if (availableOrders.length === 0) {
-      return renderEmptyState();
-    }
+  return (
+    <View style={styles.container}>
+      <Header title="Available Orders" rightComponent={<Text style={styles.subtitle}>{getAvailableOrders().length} orders</Text>} />
 
-    return (
+      {/* Stats shown as list header; FlatList handles refreshing and empty state */}
       <FlatList
-        data={availableOrders}
+        data={getAvailableOrders()}
         keyExtractor={(item) => String(item.id)}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
@@ -137,29 +135,16 @@ const AvailableOrdersScreen = ({ navigation }) => {
             style={styles.orderCard}
           />
         )}
-        contentContainerStyle={styles.ordersContent}
+        contentContainerStyle={[
+          styles.ordersContent,
+          // when there are no items, allow empty component to center
+          getAvailableOrders().length === 0 && { flex: 1 },
+        ]}
         refreshing={refreshing}
         onRefresh={onRefresh}
         ListEmptyComponent={renderEmptyState}
+        ListHeaderComponent={renderStatsBar}
       />
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      <Header title="Available Orders" rightComponent={<Text style={styles.subtitle}>{getAvailableOrders().length} orders</Text>} />
-
-      {renderStatsBar()}
-
-      <ScrollView
-        style={styles.ordersContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.ordersContent}
-      >
-        {renderOrders()}
-      </ScrollView>
     </View>
   );
 };
