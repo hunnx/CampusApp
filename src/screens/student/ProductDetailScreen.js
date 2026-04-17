@@ -143,10 +143,15 @@ const ProductDetailScreen = ({ route, navigation }) => {
       <Header title={product?.name || 'Product Details'} onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.imageSection}>
-        <Image source={{ uri: product.image }} style={styles.productImage} />
-        <View style={styles.shopInfo}>
-          <Text style={styles.shopName}>{product.shopkeeperName}</Text>
-        </View>
+        {product?.image && typeof product.image === 'string' && product.image.startsWith('http') ? (
+          <Image source={{ uri: product.image }} style={styles.productImage} />
+        ) : (
+          <View style={styles.productImagePlaceholder}>
+            <Text style={styles.productEmoji}>{product?.image || '🍽️'}</Text>
+          </View>
+        )}
+
+      
       </View>
 
       <View style={styles.detailsSection}>
@@ -203,6 +208,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 250,
     resizeMode: 'cover',
+  },
+  productImagePlaceholder: {
+    width: '100%',
+    height: 150,
+    backgroundColor: COLORS.light,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productEmoji: {
+    fontSize: 72,
   },
   shopInfo: {
     position: 'absolute',

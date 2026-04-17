@@ -11,6 +11,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { COLORS } from '../../constants';
 
 const AddCategoryScreen = ({ navigate }) => {
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ const AddCategoryScreen = ({ navigate }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigate('ShopkeeperDashboard')}>
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 20,
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   saveButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',

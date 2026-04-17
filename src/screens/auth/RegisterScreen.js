@@ -183,7 +183,7 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
   },
   scrollView: {
     flex: 1,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   registerButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2e7d32',
+    color: COLORS.primary,
   },
   footer: {
     flexDirection: 'row',

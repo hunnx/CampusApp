@@ -55,7 +55,8 @@ const StudentHomeScreen = ({ navigation }) => {
         renderItem={renderProduct}
         keyExtractor={productsKeyExtractor}
         numColumns={2}
-        contentContainerStyle={styles.productsGrid}
+        contentContainerStyle={styles.productsContainer}
+        columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}
         initialNumToRender={6}
         windowSize={10}
@@ -72,19 +73,21 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  productsContainer: {
     paddingHorizontal: SIZES.padding,
     paddingTop: SIZES.padding,
     paddingBottom: SIZES.padding * 4,
   },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: SIZES.base * 2,
+  },
   productCard: {
-    width: '48%',
+    flex: 1,
+    marginHorizontal: 6,
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius,
-    marginBottom: SIZES.base * 2,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

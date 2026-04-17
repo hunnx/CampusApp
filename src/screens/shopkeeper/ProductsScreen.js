@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 20,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2e7d32',
+    color: COLORS.primary,
   },
   productStatus: {
     padding: 12,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../../constants';
 import {
   View,
   Text,
@@ -11,7 +12,7 @@ import {
 const WelcomeScreen = ({ navigate }) => {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <View style={styles.content}>
         {/* Logo/Title Section */}
@@ -63,7 +64,7 @@ const WelcomeScreen = ({ navigate }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
   },
   content: {
     flex: 1,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2e7d32',
+    color: COLORS.primary,
   },
   registerButton: {
     backgroundColor: 'transparent',

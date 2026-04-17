@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 20,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   orderAmount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2e7d32',
+    color: COLORS.primary,
   },
   footer: {
     paddingHorizontal: 24,

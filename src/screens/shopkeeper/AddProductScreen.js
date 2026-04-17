@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 20,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   saveButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',

@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { COLORS } from '../../constants';
 import { loginUser } from '../../redux/slices/authSlice';
 
 const LoginScreen = ({ navigation }) => {
@@ -37,7 +38,7 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <View style={styles.content}>
         {/* Header */}
@@ -146,7 +147,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
   },
   content: {
     flex: 1,
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2e7d32',
+    color: COLORS.primary,
   },
   demoButton: {
     backgroundColor: 'transparent',

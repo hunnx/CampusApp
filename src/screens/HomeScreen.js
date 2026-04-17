@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../constants';
 import {
   View,
   Text,
@@ -32,7 +33,7 @@ const HomeScreen = ({ handleLogout: onLogout }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2e7d32" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <View style={styles.content}>
         {/* Header */}
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 32,
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2e7d32',
+    color: COLORS.primary,
     marginBottom: 8,
   },
   welcomeMessage: {
