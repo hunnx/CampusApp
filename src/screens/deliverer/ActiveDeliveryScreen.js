@@ -66,7 +66,7 @@ const ActiveDeliveryScreen = ({ navigation }) => {
 
   const getActiveOrders = () => {
     return orders.filter(order => 
-      order.delivererId === user?.id && 
+      String(order.delivererId) === String(user?.id) && 
       (order.status === ORDER_STATUS.PICKED || order.status === ORDER_STATUS.DELIVERED)
     ).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   };

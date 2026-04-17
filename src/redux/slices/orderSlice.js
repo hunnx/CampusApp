@@ -287,9 +287,18 @@ const orderSlice = createSlice({
       })
       .addCase(fetchOrders.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Only replace orders if we have new data, otherwise keep existing (for demo)
-        if (action.payload.length > 0) {
-          state.orders = action.payload;
+        // Merge/upsert fetched orders into existing state to avoid overwriting
+        // local/mock updates (keep existing orders and apply incoming updates)
+        if (Array.isArray(action.payload) && action.payload.length > 0) {
+          const incoming = action.payload;
+          incoming.forEach(item => {
+            const idx = state.orders.findIndex(o => String(o.id) === String(item.id));
+            if (idx !== -1) {
+              state.orders[idx] = { ...state.orders[idx], ...item };
+            } else {
+              state.orders.unshift(item);
+            }
+          });
         }
         state.error = null;
       })
