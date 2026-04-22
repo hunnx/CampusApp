@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { ORDER_STATUS } from '../../constants';
 import api from '../../services/api';
 import socketService from '../../services/socket';
+import { transformOrder, transformCreateOrderRequest, transformUpdateStatusRequest } from '../../utils/dataTransformers';
 
 // Mock storage for orders (in a real app, this would be a database)
 let mockOrdersStorage = [];
@@ -50,19 +51,24 @@ export const createOrder = createAsyncThunk(
   'orders/createOrder',
   async (orderData, { rejectWithValue, getState }) => {
     try {
-      // Try to make API call
-      const response = await api.post('/orders', orderData);
+      // Transform frontend order data to backend format
+      const backendRequest = transformCreateOrderRequest(orderData);
+      
+      const response = await api.post('/orders', backendRequest);
+      
+      // Transform backend response to frontend format
+      const transformedOrder = transformOrder(response);
       
       // Emit socket event for real-time updates
       const socket = socketService.socket;
       if (socket && socketService.isConnected()) {
-        socket.emit('newOrder', response);
+        socket.emit('newOrder', transformedOrder);
       }
       
       // Persist the order in mock storage for offline/demo review
-      saveOrderToMockStorage(response);
+      saveOrderToMockStorage(transformedOrder);
       
-      return response;
+      return transformedOrder;
     } catch (error) {
       // API call failed, create mock order for demo purposes
       console.log('API call failed, creating mock order for demo');
@@ -97,15 +103,21 @@ export const fetchOrders = createAsyncThunk(
       let endpoint = '';
       
       if (userRole === 'student') {
-        endpoint = `/orders/student/${userId}`;
+        endpoint = `/orders/user`;
       } else if (userRole === 'shopkeeper') {
-        endpoint = `/orders/shopkeeper/${userId}`;
+        endpoint = `/orders/shopkeeper`;
       } else if (userRole === 'deliverer') {
-        endpoint = `/orders/deliverer/${userId}`;
+        endpoint = `/orders/deliverer`;
       }
       
       const response = await api.get(endpoint);
-      return normalizeOrdersPayload(response);
+      
+      // Transform backend orders to frontend format
+      const transformedOrders = Array.isArray(response) 
+        ? response.map(transformOrder)
+        : [];
+      
+      return transformedOrders;
     } catch (error) {
       // API call failed, return orders from mock storage for demo
       console.log('API call failed, returning mock orders for demo');
@@ -127,7 +139,13 @@ export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/orders/${orderId}/status`, { status });
+      // Transform status to backend format (capitalize first letter)
+      const backendRequest = transformUpdateStatusRequest(status);
+      
+      const response = await api.put(`/orders/${orderId}/status`, backendRequest);
+      
+      // Transform backend response to frontend format
+      const transformedOrder = transformOrder(response);
       
       // Emit socket event for real-time updates
       const socket = socketService.socket;
@@ -135,7 +153,7 @@ export const updateOrderStatus = createAsyncThunk(
         socket.emit('orderStatusUpdate', { orderId, status });
       }
       
-      return response;
+      return transformedOrder;
     } catch (error) {
       // API call failed, create mock response for demo
       console.log('API call failed, creating mock order status update for demo');
@@ -171,21 +189,14 @@ export const fetchShopkeeperOrders = createAsyncThunk(
   'orders/fetchShopkeeperOrders',
   async (shopkeeperId, { rejectWithValue }) => {
     try {
-      // Request mock/shopkeeper orders endpoint (mockApi provides static data)
       const response = await api.get(`/orders/shopkeeper`);
-      const payload = normalizeOrdersPayload(response);
-      // If the mock returns a wrapped object (e.g., { success: true, data: [...] }), normalize will handle it.
-      // Filter by shopkeeperId so this endpoint remains compatible with a future backend.
-      let filtered = Array.isArray(payload)
-        ? payload.filter(order => String(order.shopkeeperId) === String(shopkeeperId))
+      
+      // Transform backend orders to frontend format
+      const transformedOrders = Array.isArray(response) 
+        ? response.map(transformOrder)
         : [];
-
-      // If nothing matched (e.g., user logged in with different id), fall back to mock storage
-      if ((!filtered || filtered.length === 0) && mockOrdersStorage.length > 0) {
-        filtered = mockOrdersStorage.filter(o => String(o.shopkeeperId) === String(shopkeeperId) || String(o.shopkeeperId) === '1');
-      }
-
-      return filtered;
+      
+      return transformedOrders;
     } catch (error) {
       // API call failed, return orders from mock storage for demo
       console.log('API call failed, returning mock shopkeeper orders for demo');
@@ -200,7 +211,10 @@ export const acceptOrder = createAsyncThunk(
   'orders/acceptOrder',
   async ({ orderId, delivererId }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/orders/${orderId}/accept`, { delivererId });
+      const response = await api.post(`/orders/${orderId}/accept`);
+      
+      // Transform backend response to frontend format
+      const transformedOrder = transformOrder(response);
       
       // Emit socket event for real-time updates
       const socket = socketService.socket;
@@ -208,7 +222,7 @@ export const acceptOrder = createAsyncThunk(
         socket.emit('orderAccepted', { orderId, delivererId });
       }
       
-      return response;
+      return transformedOrder;
     } catch (error) {
       // API call failed, create mock response for demo
       console.log('API call failed, creating mock order acceptance for demo');

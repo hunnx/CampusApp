@@ -2,44 +2,49 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { USER_ROLES } from '../../constants';
 import { setAuthToken } from '../../services/api';
 import socketService from '../../services/socket';
+import api from '../../services/api';
+import { transformAuthResponse } from '../../utils/dataTransformers';
 
 // Async thunks
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      // API call would go here
-      // const response = await api.post('/auth/login', credentials);
-      
-      // Mock response for demo
-      const mockUser = {
-        id: credentials.role === USER_ROLES.SHOPKEEPER ? '1' : 
-              credentials.role === USER_ROLES.DELIVERER ? 'deliverer1' :
-              credentials.email.split('@')[0],
-        name: credentials.email.split('@')[0],
-        email: credentials.email,
-        role: credentials.role || USER_ROLES.STUDENT,
-        token: 'mock-jwt-token',
-      };
-      
+      console.log('Attempting login with:', credentials.email);
+      const response = await api.post('/auth/login', {
+        emailAddress: credentials.email,
+        password: credentials.password,
+      });
+      console.log('Login response:', response);
+
+      // Transform backend response to frontend format
+      const transformedUser = transformAuthResponse(response);
+
       // Set token in API service
-      setAuthToken(mockUser.token);
-      
+      setAuthToken(transformedUser.token);
+
       // Connect to socket for real-time updates
-      socketService.connect(mockUser.token);
-      
+      socketService.connect(transformedUser.token);
+
       // Join appropriate room based on user role
-      if (mockUser.role === USER_ROLES.SHOPKEEPER) {
-        socketService.joinShopkeeperRoom(mockUser.id);
-      } else if (mockUser.role === USER_ROLES.DELIVERER) {
-        socketService.joinDelivererRoom(mockUser.id);
-      } else if (mockUser.role === USER_ROLES.STUDENT) {
-        socketService.joinStudentRoom(mockUser.id);
+      if (transformedUser.role === USER_ROLES.SHOPKEEPER) {
+        socketService.joinShopkeeperRoom(transformedUser.id);
+      } else if (transformedUser.role === USER_ROLES.DELIVERER) {
+        socketService.joinDelivererRoom(transformedUser.id);
+      } else if (transformedUser.role === USER_ROLES.STUDENT) {
+        socketService.joinStudentRoom(transformedUser.id);
       }
-      
-      return mockUser;
+
+      return transformedUser;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      console.log('Login error details:', error);
+      console.log('Error response:', error?.response);
+      console.log('Error data:', error?.response?.data);
+      const errorMessage = error?.response?.data?.error ||
+                          error?.response?.data?.message ||
+                          error?.message ||
+                          'Login failed. Please check your credentials and try again.';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -48,21 +53,26 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      // API call would go here
-      // const response = await api.post('/auth/register', userData);
-      
-      // Mock response for demo
-      const mockUser = {
-        id: Date.now().toString(),
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        token: 'mock-jwt-token',
-      };
-      
-      return mockUser;
+      const response = await api.post('/users', {
+        firstName: userData.name?.split(' ')[0] || '',
+        lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+        emailAddress: userData.email,
+        phoneNumber: userData.phoneNumber || '',
+        roleName: userData.role || USER_ROLES.STUDENT,
+        password: userData.password,
+        isActive: true,
+      });
+
+      // Transform backend response to frontend format
+      const transformedUser = transformAuthResponse(response);
+
+      return transformedUser;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      const errorMessage = error?.response?.data?.error ||
+                          error?.response?.data?.message ||
+                          error?.message ||
+                          'Registration failed. Please try again.';
+      return rejectWithValue(errorMessage);
     }
   }
 );

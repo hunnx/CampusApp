@@ -18,8 +18,8 @@ const LoginScreen = ({ navigation }) => {
   const { isLoading } = useSelector((state) => state.auth);
 
   // Dummy credentials for testing
-  const [email, setEmail] = useState('user@campusconnect.com');
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('test3@example.com');
+  const [password, setPassword] = useState('Test123');
   const [selectedRole, setSelectedRole] = useState('student');
 
   const handleLogin = async () => {
@@ -47,8 +47,8 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.subtitle}>Sign in to continue</Text>
           <View style={styles.demoInfo}>
             <Text style={styles.demoInfoText}>🔓 Demo Credentials:</Text>
-            <Text style={styles.demoCredentials}>Email: user@campusconnect.com</Text>
-            <Text style={styles.demoCredentials}>Password: 123456</Text>
+            <Text style={styles.demoCredentials}>Email: test3@example.com</Text>
+            <Text style={styles.demoCredentials}>Password: Test123</Text>
           </View>
         </View>
 

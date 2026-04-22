@@ -66,7 +66,13 @@ const ProductDetailScreen = ({ route, navigation }) => {
       <Header title="Product Details" onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.imageSection}>
-        <Image source={{ uri: currentProduct.image }} style={styles.productImage} />
+        {currentProduct?.image && typeof currentProduct.image === 'string' && currentProduct.image.startsWith('http') ? (
+          <Image source={{ uri: currentProduct.image }} style={styles.productImage} />
+        ) : (
+          <View style={styles.productImagePlaceholder}>
+            <Text style={styles.productImagePlaceholderText}>📦</Text>
+          </View>
+        )}
         {renderStatusBadge()}
       </View>
 
@@ -94,8 +100,8 @@ const ProductDetailScreen = ({ route, navigation }) => {
         <View style={styles.divider} />
 
         <Text style={styles.sectionTitle}>Shop Information</Text>
-        <Text style={styles.shopName}>{currentProduct.shopkeeperName}</Text>
-        <Text style={styles.shopId}>Shop ID: {currentProduct.shopkeeperId}</Text>
+        <Text style={styles.shopName}>{currentProduct.shopkeeperName || 'Shop information unavailable'}</Text>
+        <Text style={styles.shopId}>Shop ID: {currentProduct.shopkeeperId || 'N/A'}</Text>
 
         <View style={styles.divider} />
 
@@ -161,6 +167,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 250,
     resizeMode: 'cover',
+  },
+  productImagePlaceholder: {
+    width: '100%',
+    height: 250,
+    backgroundColor: COLORS.light,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productImagePlaceholderText: {
+    fontSize: 72,
   },
   statusBadge: {
     position: 'absolute',

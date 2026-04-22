@@ -6,20 +6,20 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  StatusBar,
-  SafeAreaView,
   Alert,
   Switch,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { addProduct } from '../../redux/slices/productSlice';
 import Header from '../../components/common/Header';
-import Input from '../../components/common/Input';
-import Button from '../../components/buttons/Button';
-import { COLORS, SIZES } from '../../constants';
+import { COLORS } from '../../constants';
 
 const AddProductScreen = ({ navigate, navigation }) => {
+  const dispatch = useDispatch();
+  const { isLoading } = useSelector(state => state.products);
+  
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -54,8 +54,8 @@ const AddProductScreen = ({ navigate, navigation }) => {
     // In real app, implement camera/gallery picker
   };
 
-  const handleSaveProduct = () => {
-    const { name, category, price, description } = formData;
+  const handleSaveProduct = async () => {
+    const { name, category, price, description, available } = formData;
 
     if (!name || !category || !price) {
       Alert.alert('Error', 'Please fill in all required fields');
@@ -67,13 +67,29 @@ const AddProductScreen = ({ navigate, navigation }) => {
       return;
     }
 
-    // Simulate saving product
-    Alert.alert('Success', 'Product saved successfully!', [
-      {
-        text: 'OK',
-        onPress: () => navigate('ShopkeeperDashboard'),
-      },
-    ]);
+    try {
+      const productData = {
+        name,
+        category,
+        price: parseFloat(price),
+        description,
+        available,
+        image: formData.image || null,
+        quantity: 100, // Default quantity
+        preparationTime: 15, // Default preparation time in minutes
+      };
+
+      await dispatch(addProduct(productData)).unwrap();
+      
+      Alert.alert('Success', 'Product saved successfully!', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save product. Please try again.');
+    }
   };
 
   const updateFormData = (field, value) => {
@@ -162,8 +178,16 @@ const AddProductScreen = ({ navigate, navigation }) => {
           </View>
 
           {/* Save Button */}
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveProduct}>
-            <Text style={styles.saveButtonText}>💾 Save Product</Text>
+          <TouchableOpacity 
+            style={styles.saveButton} 
+            onPress={handleSaveProduct}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text style={styles.saveButtonText}>💾 Save Product</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

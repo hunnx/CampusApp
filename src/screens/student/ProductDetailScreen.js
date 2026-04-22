@@ -37,8 +37,8 @@ const ProductDetailScreen = ({ route, navigation }) => {
         name: product.name,
         price: product.price,
         image: product.image,
-        shopkeeperId: product.shopkeeperId || '1',
-        shopkeeperName: product.shopkeeperName || 'Campus Shop',
+        shopkeeperId: product.shopkeeperId,
+        shopkeeperName: product.shopkeeperName,
       },
       quantity,
     }));

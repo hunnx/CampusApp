@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -100,15 +100,10 @@ const EditProductScreen = ({ route, navigation }) => {
   };
 
   const handleImageUpload = () => {
-    // Mock image upload - in real app, would use ImagePicker
-    const mockImages = [
-      'https://via.placeholder.com/300x300/FF6B35/FFFFFF?text=Updated',
-      'https://via.placeholder.com/300x300/004E89/FFFFFF?text=Updated',
-      'https://via.placeholder.com/300x300/4CAF50/FFFFFF?text=Updated',
-    ];
-    
-    const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
-    handleInputChange('image', randomImage);
+    Alert.alert(
+      'Image Upload',
+      'Image picker is not connected yet, so the current backend image will be kept.'
+    );
   };
 
   const renderCategorySelector = () => {

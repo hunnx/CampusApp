@@ -1,60 +1,67 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../services/api';
+import { transformProduct } from '../../utils/dataTransformers';
 
-// Async thunks
+const normalizeProductsPayload = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.products)) {
+    return payload.products;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  if (Array.isArray(payload?.results)) {
+    return payload.results;
+  }
+  return [];
+};
+
+const getProductErrorMessage = (error, fallbackMessage) => (
+  error?.response?.data?.error ||
+  error?.response?.data?.message ||
+  error?.message ||
+  fallbackMessage
+);
+
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (_, { rejectWithValue }) => {
     try {
-      // API call would go here
-      // const response = await api.get('/products');
-      
-      // Mock data for demo
-      const mockProducts = [
-        {
-          id: '1',
-          name: 'Fresh Juice',
-          category: 'Food & Beverages',
-          price: 150,
-          image: 'https://via.placeholder.com/150x150/FF6B35/FFFFFF?text=Juice',
-          available: true,
-          shopkeeperId: '1',
-          shopkeeperName: 'Campus Cafe',
-        },
-        {
-          id: '2',
-          name: 'Notebook',
-          category: 'Stationery',
-          price: 80,
-          image: 'https://via.placeholder.com/150x150/004E89/FFFFFF?text=Notebook',
-          available: true,
-          shopkeeperId: '1',
-          shopkeeperName: 'Campus Store',
-        },
-        {
-          id: '3',
-          name: 'Headphones',
-          category: 'Electronics',
-          price: 1200,
-          image: 'https://via.placeholder.com/150x150/4CAF50/FFFFFF?text=Headphones',
-          available: true,
-          shopkeeperId: '2',
-          shopkeeperName: 'Tech Shop',
-        },
-        {
-          id: '4',
-          name: 'T-Shirt',
-          category: 'Clothing',
-          price: 500,
-          image: 'https://via.placeholder.com/150x150/FF9800/FFFFFF?text=T-Shirt',
-          available: false,
-          shopkeeperId: '3',
-          shopkeeperName: 'Fashion Hub',
-        },
-      ];
-      
-      return mockProducts;
+      const response = await api.get('/products');
+      return normalizeProductsPayload(response).map(transformProduct);
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch products');
+      return rejectWithValue(getProductErrorMessage(error, 'Failed to fetch products'));
+    }
+  }
+);
+
+export const fetchMyProducts = createAsyncThunk(
+  'products/fetchMyProducts',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      let response;
+
+      try {
+        response = await api.get('/products/my');
+      } catch {
+        response = await api.get('/products');
+      }
+
+      let transformedProducts = normalizeProductsPayload(response).map(transformProduct);
+      const currentUserId = getState()?.auth?.user?.id;
+      const hasOwnershipData = transformedProducts.some(product => product.shopkeeperId);
+
+      if (currentUserId && hasOwnershipData) {
+        transformedProducts = transformedProducts.filter(
+          product => String(product.shopkeeperId) === String(currentUserId)
+        );
+      }
+
+      return transformedProducts;
+    } catch (error) {
+      return rejectWithValue(getProductErrorMessage(error, 'Failed to fetch your products'));
     }
   }
 );
@@ -63,20 +70,19 @@ export const addProduct = createAsyncThunk(
   'products/addProduct',
   async (productData, { rejectWithValue }) => {
     try {
-      // API call would go here
-      // const response = await api.post('/products', productData);
-      
-      // Mock response for demo
-      const newProduct = {
-        id: Date.now().toString(),
-        ...productData,
-        shopkeeperId: 'current-user-id',
-        shopkeeperName: 'Current Shopkeeper',
-      };
-      
-      return newProduct;
+      const response = await api.post('/products', {
+        productCategoryId: productData.categoryId || 1,
+        name: productData.name,
+        price: productData.price,
+        quantity: productData.quantity,
+        imageUrl: productData.image,
+        preperationTimeMinutes: productData.preparationTime || 15,
+        isAvailable: productData.available !== undefined ? productData.available : true,
+      });
+
+      return transformProduct(response);
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to add product');
+      return rejectWithValue(getProductErrorMessage(error, 'Failed to add product'));
     }
   }
 );
@@ -85,18 +91,18 @@ export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, productData }, { rejectWithValue }) => {
     try {
-      // API call would go here
-      // const response = await api.put(`/products/${id}`, productData);
-      
-      // Mock response for demo
-      const updatedProduct = {
-        id,
-        ...productData,
-      };
-      
-      return updatedProduct;
+      const response = await api.put(`/products/${id}`, {
+        name: productData.name,
+        price: productData.price,
+        quantity: productData.quantity,
+        imageUrl: productData.image,
+        preperationTimeMinutes: productData.preparationTime || 15,
+        isAvailable: productData.available !== undefined ? productData.available : true,
+      });
+
+      return transformProduct(response);
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update product');
+      return rejectWithValue(getProductErrorMessage(error, 'Failed to update product'));
     }
   }
 );
@@ -119,7 +125,6 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Products
       .addCase(fetchProducts.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -131,9 +136,23 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;
+        state.products = [];
         state.error = action.payload;
       })
-      // Add Product
+      .addCase(fetchMyProducts.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyProducts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.products = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchMyProducts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.products = [];
+        state.error = action.payload;
+      })
       .addCase(addProduct.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -147,17 +166,18 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      // Update Product
       .addCase(updateProduct.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.isLoading = false;
-        const index = state.products.findIndex(p => p.id === action.payload.id);
+        const index = state.products.findIndex(product => product.id === action.payload.id);
+
         if (index !== -1) {
           state.products[index] = action.payload;
         }
+
         state.error = null;
       })
       .addCase(updateProduct.rejected, (state, action) => {

@@ -8,14 +8,17 @@ import {
   Alert,
   Dimensions,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
 import { fetchShopkeeperOrders } from '../../redux/slices/orderSlice';
 import socketService from '../../services/socket';
+import api from '../../services/api';
 import Header from '../../components/common/Header';
 import DashboardCard from '../../components/cards/DashboardCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
+import { transformDashboardStats } from '../../utils/dataTransformers';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 48) / 2; // 2 cards per row with padding
@@ -26,6 +29,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   const { orders } = useSelector(state => state.orders);
   
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({
     categories: 0,
     totalProducts: 0,
@@ -68,12 +72,30 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
     try {
       if (user?.id) {
         console.log('Loading dashboard data for shopkeeper:', user.id);
-        const result = await dispatch(fetchShopkeeperOrders(user.id));
-        console.log('Dashboard data loaded:', result.payload);
-        updateDashboardStats();
+        
+        // Fetch orders
+        await dispatch(fetchShopkeeperOrders(user.id));
+        
+        // Fetch dashboard stats from backend
+        await fetchDashboardStats();
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+    }
+  };
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoadingStats(true);
+      const response = await api.get('/dashboard/stats');
+      const transformedStats = transformDashboardStats(response);
+      setDashboardStats(transformedStats);
+    } catch (error) {
+      console.log('Failed to fetch dashboard stats from backend, using order counts:', error.message);
+      // Fallback to calculating from orders
+      updateDashboardStats();
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -144,40 +166,47 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
       >
 
         {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <DashboardCard
-            title="Categories"
-            value={dashboardStats.categories}
-            icon="📂"
-            color="#FF6B6B"
-            onPress={() => handleCardPress('categories')}
-            style={{ width: cardWidth }}
-          />
-          <DashboardCard
-            title="Total Products"
-            value={dashboardStats.totalProducts}
-            icon="🛍️"
-            color="#4ECDC4"
-            onPress={() => handleCardPress('products')}
-            style={{ width: cardWidth }}
-          />
-          <DashboardCard
-            title="Total Orders"
-            value={dashboardStats.totalOrders}
-            icon="📦"
-            color="#45B7D1"
-            onPress={() => handleCardPress('orders')}
-            style={{ width: cardWidth }}
-          />
-          <DashboardCard
-            title="Completed"
-            value={dashboardStats.completedOrders}
-            icon="✅"
-            color="#96CEB4"
-            onPress={() => handleCardPress('completed')}
-            style={{ width: cardWidth }}
-          />
-        </View>
+        {loadingStats ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Loading dashboard stats...</Text>
+          </View>
+        ) : (
+          <View style={styles.statsGrid}>
+            <DashboardCard
+              title="Categories"
+              value={dashboardStats.categories}
+              icon="📂"
+              color="#FF6B6B"
+              onPress={() => handleCardPress('categories')}
+              style={{ width: cardWidth }}
+            />
+            <DashboardCard
+              title="Total Products"
+              value={dashboardStats.totalProducts}
+              icon="🛍️"
+              color="#4ECDC4"
+              onPress={() => handleCardPress('products')}
+              style={{ width: cardWidth }}
+            />
+            <DashboardCard
+              title="Total Orders"
+              value={dashboardStats.totalOrders}
+              icon="📦"
+              color="#45B7D1"
+              onPress={() => handleCardPress('orders')}
+              style={{ width: cardWidth }}
+            />
+            <DashboardCard
+              title="Completed"
+              value={dashboardStats.completedOrders}
+              icon="✅"
+              color="#96CEB4"
+              onPress={() => handleCardPress('completed')}
+              style={{ width: cardWidth }}
+            />
+          </View>
+        )}
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
@@ -438,6 +467,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: COLORS.gray,
   },
 });
 

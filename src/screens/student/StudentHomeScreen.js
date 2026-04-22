@@ -1,23 +1,33 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import Header from '../../components/common/Header';
 import { COLORS, SIZES } from '../../constants';
+import { fetchProducts } from '../../redux/slices/productSlice';
 
 const StudentHomeScreen = ({ navigation }) => {
-  const [products] = useState([
-    { id: 1, name: 'Burger Combo', price: 350, category: 'Fast Food', image: '🍔', available: true },
-    { id: 2, name: 'Pizza Slice', price: 200, category: 'Fast Food', image: '🍕', available: true },
-    { id: 3, name: 'Sandwich', price: 150, category: 'Snacks', image: '🥪', available: true },
-    { id: 4, name: 'Pasta Bowl', price: 280, category: 'Italian', image: '🍝', available: true },
-    { id: 5, name: 'Salad Bowl', price: 180, category: 'Healthy', image: '🥗', available: true },
-    { id: 6, name: 'Ice Cream', price: 120, category: 'Desserts', image: '🍦', available: false },
-  ]);
+  const dispatch = useDispatch();
+  const { products, isLoading, error } = useSelector(state => state.products);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    dispatch(fetchProducts()).then(() => {
+      setRefreshing(false);
+    });
+  }, [dispatch]);
 
   const handleProductPress = useCallback((product) => {
     navigation.navigate('ProductDetail', { product });
@@ -26,7 +36,7 @@ const StudentHomeScreen = ({ navigation }) => {
   const renderProduct = useCallback(({ item }) => (
     <TouchableOpacity style={styles.productCard} onPress={() => handleProductPress(item)}>
       <View style={styles.productImage}>
-        <Text style={styles.productEmoji}>{item.image}</Text>
+        <Text style={styles.productEmoji}>{item.image?.includes('http') ? '📦' : item.image || '📦'}</Text>
       </View>
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
@@ -46,9 +56,29 @@ const StudentHomeScreen = ({ navigation }) => {
 
   const productsKeyExtractor = useCallback((item) => item.id.toString(), []);
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Header title="🎓 Student Home" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading products...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Header title="🎓 Student Home" />
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+          <TouchableOpacity onPress={onRefresh} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <FlatList
         style={styles.scrollView}
         data={products}
@@ -60,6 +90,23 @@ const StudentHomeScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         initialNumToRender={6}
         windowSize={10}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.primary]}
+          />
+        }
+        ListEmptyComponent={
+          !isLoading && products.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No products available</Text>
+              <TouchableOpacity onPress={onRefresh} style={styles.retryButton}>
+                <Text style={styles.retryButtonText}>Refresh</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
       />
     </View>
   );
@@ -135,6 +182,53 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: SIZES.font - 4,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: SIZES.font,
+    color: COLORS.gray,
+  },
+  errorContainer: {
+    backgroundColor: '#fee',
+    padding: SIZES.padding,
+    marginHorizontal: SIZES.padding,
+    marginTop: SIZES.padding,
+    borderRadius: SIZES.radius,
+    borderWidth: 1,
+    borderColor: COLORS.danger,
+  },
+  errorText: {
+    color: COLORS.danger,
+    fontSize: SIZES.font,
+    marginBottom: SIZES.base,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SIZES.padding,
+    paddingVertical: SIZES.base / 2,
+    borderRadius: SIZES.radius,
+    alignSelf: 'flex-start',
+  },
+  retryButtonText: {
+    color: COLORS.white,
+    fontSize: SIZES.font,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SIZES.padding * 4,
+  },
+  emptyText: {
+    fontSize: SIZES.font,
+    color: COLORS.gray,
+    marginBottom: SIZES.base,
   },
 });
 

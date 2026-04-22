@@ -164,42 +164,17 @@ export const mockApiResponses = {
   // Products endpoints
   'GET:/products': async () => {
     await delay();
-    return [
-      {
-        id: 'prod1',
-        name: 'Coffee',
-        price: 50,
-        category: 'Beverages',
-        image: 'https://via.placeholder.com/200',
-      },
-      {
-        id: 'prod2',
-        name: 'Tea',
-        price: 30,
-        category: 'Beverages',
-        image: 'https://via.placeholder.com/200',
-      },
-    ];
+    return [];
   },
 
-  'POST:/products': async (data) => {
+  'POST:/products': async () => {
     await delay();
-    return {
-      id: 'prod_' + Math.random().toString(36).substr(2, 9),
-      ...data,
-      createdAt: new Date().toISOString(),
-    };
+    throw new Error('Mock product creation is disabled. Use the backend product API.');
   },
 
-  'GET:/products/:id': async (data) => {
+  'GET:/products/:id': async () => {
     await delay();
-    return {
-      id: 'prod1',
-      name: 'Product Name',
-      price: 100,
-      description: 'Mock product',
-      createdAt: new Date().toISOString(),
-    };
+    throw new Error('Mock product details are disabled. Use the backend product API.');
   },
 
   // User endpoints

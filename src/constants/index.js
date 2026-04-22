@@ -1,5 +1,7 @@
 // App Constants
-export const API_BASE_URL = 'https://your-api-url.com/api';
+export const API_ORIGIN = 'https://localhost:7200';
+export const API_BASE_URL = `${API_ORIGIN}/api`;
+export const SOCKET_BASE_URL = API_ORIGIN;
 
 export const USER_ROLES = {
   STUDENT: 'student',
@@ -19,15 +21,17 @@ export const ORDER_STATUS = {
 export const DELIVERY_CHARGE = 100; // PKR
 
 export const COLORS = {
-  primary: '#FF6B35',
-  secondary: '#004E89',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  danger: '#F44336',
-  dark: '#212121',
-  light: '#F5F5F5',
+  primary: '#6B8E23',   // olive green
+  secondary: '#2D2A26', // dark brown-black
+  success: '#7BAE7F',
+  warning: '#D4A373',
+  danger: '#E76F51',
+  dark: '#1C1917',
+  light: '#FAF7F2',
   white: '#FFFFFF',
-  gray: '#9E9E9E',
+  gray: '#A8A29E',
+  border: '#E7E5E4',
+  card: '#FFFCF8',
 };
 
 export const SIZES = {

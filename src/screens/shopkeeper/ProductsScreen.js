@@ -1,105 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StatusBar,
-  SafeAreaView,
   Alert,
-  FlatList,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from '../../components/common/Header';
-import Button from '../../components/buttons/Button';
-import { COLORS, SIZES } from '../../constants';
+import { COLORS } from '../../constants';
+import { fetchMyProducts, updateProduct } from '../../redux/slices/productSlice';
 
 const { width } = Dimensions.get('window');
-const productCardWidth = (width - 48) / 2; // 2 products per row
+const productCardWidth = (width - 48) / 2;
 
 const ProductsScreen = ({ navigation }) => {
-  // Mock products data
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Burger Combo',
-      price: 350,
-      category: 'Fast Food',
-      image: '🍔',
-      available: true,
-    },
-    {
-      id: 2,
-      name: 'Pizza Slice',
-      price: 200,
-      category: 'Fast Food',
-      image: '🍕',
-      available: true,
-    },
-    {
-      id: 3,
-      name: 'Sandwich',
-      price: 150,
-      category: 'Snacks',
-      image: '🥪',
-      available: false,
-    },
-    {
-      id: 4,
-      name: 'Pasta Bowl',
-      price: 280,
-      category: 'Italian',
-      image: '🍝',
-      available: true,
-    },
-    {
-      id: 5,
-      name: 'Salad Bowl',
-      price: 180,
-      category: 'Healthy',
-      image: '🥗',
-      available: true,
-    },
-    {
-      id: 6,
-      name: 'Ice Cream',
-      price: 120,
-      category: 'Desserts',
-      image: '🍦',
-      available: false,
-    },
-  ]);
+  const dispatch = useDispatch();
+  const { products, isLoading } = useSelector(state => state.products);
+
+  useEffect(() => {
+    dispatch(fetchMyProducts());
+  }, [dispatch]);
 
   const handleAddProduct = () => {
-    Alert.alert('Add Product', 'Navigate to Add Product Screen');
+    navigation.navigate('AddProduct');
   };
 
   const handleProductPress = (product) => {
-    Alert.alert('Product Details', `${product.name}\nPrice: PKR ${product.price}\nStatus: ${product.available ? 'Available' : 'Out of Stock'}`);
+    navigation.navigate('ProductDetail', { product });
   };
 
-  const toggleAvailability = (productId) => {
-    setProducts(prevProducts =>
-      prevProducts.map(product =>
-        product.id === productId
-          ? { ...product, available: !product.available }
-          : product
-      )
-    );
+  const toggleAvailability = async (product) => {
+    try {
+      await dispatch(updateProduct({
+        id: product.id,
+        productData: {
+          ...product,
+          available: !product.available,
+        },
+      })).unwrap();
+    } catch (error) {
+      Alert.alert('Error', error || 'Failed to update product availability.');
+    }
   };
 
-  const ProductCard = ({ product }) => (
+  const renderProductCard = (product) => (
     <TouchableOpacity
+      key={product.id}
       style={styles.productCard}
       onPress={() => handleProductPress(product)}
       activeOpacity={0.8}
     >
       <View style={styles.productImage}>
-        <Text style={styles.productEmoji}>{product.image}</Text>
+        <Text style={styles.productEmoji}>
+          {product.image?.startsWith('http') ? '📦' : product.image || '📦'}
+        </Text>
       </View>
-      
+
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={2}>
           {product.name}
@@ -112,17 +72,17 @@ const ProductsScreen = ({ navigation }) => {
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: product.available ? '#4CAF50' : '#f44336' },
+            product.available ? styles.availableBadge : styles.unavailableBadge,
           ]}
         >
           <Text style={styles.statusText}>
             {product.available ? 'Available' : 'Out of Stock'}
           </Text>
         </View>
-        
+
         <TouchableOpacity
           style={styles.toggleButton}
-          onPress={() => toggleAvailability(product.id)}
+          onPress={() => toggleAvailability(product)}
         >
           <Text style={styles.toggleButtonText}>
             {product.available ? 'Disable' : 'Enable'}
@@ -134,23 +94,32 @@ const ProductsScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header 
-        title="🛍️ My Products" 
-        onBackPress={() => navigation.goBack()} 
-        rightComponent={
+      <Header
+        title="🛍️ My Products"
+        onBackPress={() => navigation.goBack()}
+        rightComponent={(
           <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
             <Text style={styles.addButtonText}>➕ Add Product</Text>
           </TouchableOpacity>
-        }
+        )}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.productsGrid}>
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading products...</Text>
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.productsGrid}>
+            {products.length > 0 ? (
+              products.map(renderProductCard)
+            ) : (
+              <Text style={styles.emptyStateText}>No backend products found yet.</Text>
+            )}
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -163,34 +132,16 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  backButtonText: {
-    fontSize: 20,
-    color: '#ffffff',
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    flex: 1,
-    textAlign: 'center',
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: COLORS.gray,
   },
   addButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -210,6 +161,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
+  },
+  emptyStateText: {
+    width: '100%',
+    textAlign: 'center',
+    fontSize: 14,
+    color: COLORS.gray,
+    paddingVertical: 24,
   },
   productCard: {
     width: productCardWidth,
@@ -261,6 +219,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignSelf: 'flex-start',
     marginBottom: 8,
+  },
+  availableBadge: {
+    backgroundColor: '#4CAF50',
+  },
+  unavailableBadge: {
+    backgroundColor: '#f44336',
   },
   statusText: {
     color: '#ffffff',

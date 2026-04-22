@@ -4,9 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
-  TextInput,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../../redux/slices/orderSlice';
@@ -53,12 +51,19 @@ const CheckoutScreen = ({ route, navigation }) => {
       return;
     }
 
+    const pickupLocation = items[0]?.shopkeeperName || items[0]?.pickupLocation || '';
+
+    if (!pickupLocation) {
+      Alert.alert('Error', 'This product is missing shop information from the backend. Please reload products and try again.');
+      return;
+    }
+
     try {
       const orderData = {
         studentId: user.id,
         studentName: user.name,
-        shopkeeperId: items[0]?.shopkeeperId || '1', // Use actual shopkeeperId from product, default to '1'
-        shopkeeperName: items[0]?.shopkeeperName || 'Campus Shop',
+        shopkeeperId: items[0]?.shopkeeperId || null,
+        shopkeeperName: items[0]?.shopkeeperName || '',
         items: items.map(item => ({
           productId: item.id,
           name: item.name,
@@ -67,7 +72,7 @@ const CheckoutScreen = ({ route, navigation }) => {
         })),
         totalAmount: totalAmount - DELIVERY_CHARGE, // Remove delivery charge from items total
         deliveryCharge: DELIVERY_CHARGE,
-        pickupLocation: items[0]?.shopkeeperName || 'Campus Shop',
+        pickupLocation,
         dropLocation: deliveryAddress,
         contactNumber,
         orderNotes,
