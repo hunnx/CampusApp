@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -54,7 +54,10 @@ const StudentHomeScreen = ({ navigation }) => {
     </TouchableOpacity>
   ), [handleProductPress]);
 
-  const productsKeyExtractor = useCallback((item) => item.id.toString(), []);
+  const productsKeyExtractor = useCallback(
+    (item) => String(item.productCategoryItemId || item.id || item.name),
+    []
+  );
 
   if (isLoading) {
     return (

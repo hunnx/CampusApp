@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
   FlatList,
@@ -17,23 +16,25 @@ import Button from '../../components/buttons/Button';
 
 const CartScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const { items: cartItems, totalItems, totalAmount } = useSelector(state => state.cart);
+  const { items: cartItems, totalItems } = useSelector(state => state.cart);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
   const deliveryCharge = cartItems.length > 0 ? DELIVERY_CHARGE : 0;
   const finalTotal = subtotal + deliveryCharge;
 
-  const handleQuantityChange = (itemId, change) => {
-    const item = cartItems.find(item => item.id === itemId);
+  const handleQuantityChange = (productCategoryItemId, change) => {
+    const item = cartItems.find(
+      cartItem => String(cartItem.productCategoryItemId) === String(productCategoryItemId)
+    );
     if (!item) return;
 
     const newQuantity = item.quantity + change;
     if (newQuantity >= 1 && newQuantity <= 10) {
-      dispatch(updateQuantity({ productId: itemId, quantity: newQuantity }));
+      dispatch(updateQuantity({ productCategoryItemId, quantity: newQuantity }));
     }
   };
 
-  const handleRemoveItem = (itemId) => {
+  const handleRemoveItem = (productCategoryItemId) => {
     Alert.alert(
       'Remove Item',
       'Are you sure you want to remove this item from cart?',
@@ -45,7 +46,7 @@ const CartScreen = ({ navigation }) => {
         {
           text: 'Remove',
           onPress: () => {
-            dispatch(removeFromCart(itemId));
+            dispatch(removeFromCart(productCategoryItemId));
           },
         },
       ]
@@ -79,33 +80,40 @@ const CartScreen = ({ navigation }) => {
 
     navigation.navigate('Checkout', {
       items: cartItems,
-      totalAmount: finalTotal,
     });
   };
 
   const renderCartItem = ({ item }) => {
+    const imageUri = item.imageUrl || item.image;
+
     return (
       <View style={styles.cartItem}>
-        <Image
-          source={{ uri: item.image }}
-          style={styles.itemImage}
-          resizeMode="cover"
-        />
+        {imageUri ? (
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.itemImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.itemImagePlaceholder} />
+        )}
+
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.name}</Text>
-          <Text style={styles.itemShop}>{item.shopkeeperName}</Text>
           <Text style={styles.itemPrice}>PKR {item.price}</Text>
         </View>
+
         <View style={styles.quantityContainer}>
           <TouchableOpacity
             style={styles.quantityButton}
-            onPress={() => handleQuantityChange(item.id, -1)}
+            onPress={() => handleQuantityChange(item.productCategoryItemId, -1)}
             disabled={item.quantity <= 1}
           >
             <Text style={[
               styles.quantityButtonText,
-              item.quantity <= 1 && styles.quantityButtonTextDisabled
-            ]}>
+              item.quantity <= 1 && styles.quantityButtonTextDisabled,
+            ]}
+            >
               -
             </Text>
           </TouchableOpacity>
@@ -116,62 +124,59 @@ const CartScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.quantityButton}
-            onPress={() => handleQuantityChange(item.id, 1)}
+            onPress={() => handleQuantityChange(item.productCategoryItemId, 1)}
             disabled={item.quantity >= 10}
           >
             <Text style={[
               styles.quantityButtonText,
-              item.quantity >= 10 && styles.quantityButtonTextDisabled
-            ]}>
+              item.quantity >= 10 && styles.quantityButtonTextDisabled,
+            ]}
+            >
               +
             </Text>
           </TouchableOpacity>
         </View>
+
         <TouchableOpacity
           style={styles.removeButton}
-          onPress={() => handleRemoveItem(item.id)}
+          onPress={() => handleRemoveItem(item.productCategoryItemId)}
         >
-          <Text style={styles.removeButtonText}>×</Text>
+          <Text style={styles.removeButtonText}>x</Text>
         </TouchableOpacity>
       </View>
     );
   };
 
-  const renderEmptyCart = () => {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyIcon}>🛒</Text>
-        <Text style={styles.emptyTitle}>Your cart is empty</Text>
-        <Text style={styles.emptySubtitle}>
-          Add some delicious items to get started!
-        </Text>
-        <Button
-          title="Start Shopping"
-          onPress={() => navigation.navigate('Home')}
-          style={styles.shopButton}
-        />
-      </View>
-    );
-  };
+  const renderEmptyCart = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyTitle}>Your cart is empty</Text>
+      <Text style={styles.emptySubtitle}>
+        Add some items to get started.
+      </Text>
+      <Button
+        title="Start Shopping"
+        onPress={() => navigation.navigate('Home')}
+        style={styles.shopButton}
+      />
+    </View>
+  );
 
-  const renderCartSummary = () => {
-    return (
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Subtotal ({totalItems} items)</Text>
-          <Text style={styles.summaryValue}>PKR {subtotal}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Delivery Charge</Text>
-          <Text style={styles.summaryValue}>PKR {deliveryCharge}</Text>
-        </View>
-        <View style={[styles.summaryRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>PKR {finalTotal}</Text>
-        </View>
+  const renderCartSummary = () => (
+    <View style={styles.summaryContainer}>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>Subtotal ({totalItems} items)</Text>
+        <Text style={styles.summaryValue}>PKR {subtotal}</Text>
       </View>
-    );
-  };
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>Delivery Charge</Text>
+        <Text style={styles.summaryValue}>PKR {deliveryCharge}</Text>
+      </View>
+      <View style={[styles.summaryRow, styles.totalRow]}>
+        <Text style={styles.totalLabel}>Total</Text>
+        <Text style={styles.totalValue}>PKR {finalTotal}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -193,7 +198,7 @@ const CartScreen = ({ navigation }) => {
           <FlatList
             data={cartItems}
             renderItem={renderCartItem}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.productCategoryItemId.toString()}
             contentContainerStyle={styles.cartList}
             showsVerticalScrollIndicator={false}
           />
@@ -240,6 +245,13 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radius,
     marginRight: SIZES.padding,
   },
+  itemImagePlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: SIZES.radius,
+    marginRight: SIZES.padding,
+    backgroundColor: COLORS.light,
+  },
   itemInfo: {
     flex: 1,
   },
@@ -247,11 +259,6 @@ const styles = StyleSheet.create({
     fontSize: SIZES.h3,
     fontWeight: 'bold',
     color: COLORS.dark,
-    marginBottom: 2,
-  },
-  itemShop: {
-    fontSize: 12,
-    color: COLORS.gray,
     marginBottom: 2,
   },
   itemPrice: {
@@ -354,10 +361,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: SIZES.padding * 2,
-  },
-  emptyIcon: {
-    fontSize: 80,
-    marginBottom: SIZES.padding,
   },
   emptyTitle: {
     fontSize: SIZES.h2,

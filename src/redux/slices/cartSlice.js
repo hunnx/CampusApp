@@ -10,7 +10,9 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const { product, quantity = 1 } = action.payload;
-      const existingItemIndex = state.items.findIndex(item => item.id === product.id);
+      const existingItemIndex = state.items.findIndex(
+        item => String(item.productCategoryItemId) === String(product.productCategoryItemId)
+      );
 
       if (existingItemIndex >= 0) {
         // Item already exists, update quantity
@@ -20,6 +22,7 @@ const cartSlice = createSlice({
         // Add new item
         const newItem = {
           ...product,
+          productCategoryItemId: product.productCategoryItemId?.toString(),
           quantity,
           totalPrice: product.price * quantity,
         };
@@ -31,16 +34,20 @@ const cartSlice = createSlice({
       state.totalAmount = state.items.reduce((sum, item) => sum + item.totalPrice, 0);
     },
     removeFromCart: (state, action) => {
-      const productId = action.payload;
-      state.items = state.items.filter(item => item.id !== productId);
+      const productCategoryItemId = action.payload;
+      state.items = state.items.filter(
+        item => String(item.productCategoryItemId) !== String(productCategoryItemId)
+      );
 
       // Update totals
       state.totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
       state.totalAmount = state.items.reduce((sum, item) => sum + item.totalPrice, 0);
     },
     updateQuantity: (state, action) => {
-      const { productId, quantity } = action.payload;
-      const itemIndex = state.items.findIndex(item => item.id === productId);
+      const { productCategoryItemId, quantity } = action.payload;
+      const itemIndex = state.items.findIndex(
+        item => String(item.productCategoryItemId) === String(productCategoryItemId)
+      );
 
       if (itemIndex >= 0) {
         if (quantity <= 0) {

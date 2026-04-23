@@ -99,17 +99,23 @@ const ProductDetailScreen = ({ route, navigation }) => {
 
         <View style={styles.divider} />
 
-        <Text style={styles.sectionTitle}>Shop Information</Text>
-        <Text style={styles.shopName}>{currentProduct.shopkeeperName || 'Shop information unavailable'}</Text>
-        <Text style={styles.shopId}>Shop ID: {currentProduct.shopkeeperId || 'N/A'}</Text>
+        {currentProduct.shopkeeperName || currentProduct.shopkeeperId ? (
+          <>
+            <Text style={styles.sectionTitle}>Shop Information</Text>
+            <Text style={styles.shopName}>{currentProduct.shopkeeperName}</Text>
+            {currentProduct.shopkeeperId ? (
+              <Text style={styles.shopId}>Shop ID: {currentProduct.shopkeeperId}</Text>
+            ) : null}
 
-        <View style={styles.divider} />
+            <View style={styles.divider} />
+          </>
+        ) : null}
 
         <Text style={styles.sectionTitle}>Product Details</Text>
         <View style={styles.detailsGrid}>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Product ID</Text>
-            <Text style={styles.detailValue}>{currentProduct.id}</Text>
+            <Text style={styles.detailValue}>{currentProduct.productCategoryItemId || currentProduct.id}</Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Category</Text>

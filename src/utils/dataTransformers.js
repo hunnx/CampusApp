@@ -17,6 +17,11 @@ const pickFirstDefined = (...values) => values.find(
   value => value !== undefined && value !== null && value !== ''
 );
 
+const toInteger = (value) => {
+  const parsedValue = Number.parseInt(value, 10);
+  return Number.isNaN(parsedValue) ? null : parsedValue;
+};
+
 const transformKeysToCamelCase = (obj) => {
   if (obj === null || obj === undefined) {
     return obj;
@@ -65,7 +70,7 @@ export const transformOrder = (backendOrder) => {
     status: transformed.orderStatus?.toLowerCase() || transformed.status,
     items: (transformed.orderItems || transformed.items || []).map(item => ({
       id: item.orderItemId?.toString() || item.id,
-      productId: item.productCategoryItemId?.toString() || item.productId,
+      productCategoryItemId: item.productCategoryItemId?.toString() || item.productId?.toString() || item.productId,
       name: item.productName || item.name,
       price: item.unitPrice || item.price,
       quantity: item.quantity,
@@ -73,8 +78,8 @@ export const transformOrder = (backendOrder) => {
     })),
     totalAmount: transformed.totalAmount || 0,
     deliveryCharge: transformed.deliveryFee || 0,
-    pickupLocation: transformed.pickupPoint || transformed.pickupLocation,
-    dropLocation: transformed.destination || transformed.dropLocation,
+    pickupLocation: pickFirstDefined(transformed.pickupPoint, transformed.pickupLocation, ''),
+    dropLocation: pickFirstDefined(transformed.destination, transformed.dropLocation, ''),
     contactNumber: transformed.contactNumber || '',
     orderNotes: transformed.specialNotes || transformed.orderNotes,
     paymentMethod: transformed.paymentMethod || 'Cash',
@@ -86,10 +91,15 @@ export const transformOrder = (backendOrder) => {
 
 export const transformProduct = (backendProduct) => {
   const transformed = transformKeysToCamelCase(backendProduct);
-  const productId = pickFirstDefined(
+  const productCategoryItemId = pickFirstDefined(
     transformed.productCategoryItemId,
     transformed.productId,
     transformed.id
+  );
+  const productCategoryId = pickFirstDefined(
+    transformed.productCategoryId,
+    transformed.categoryId,
+    null
   );
   const numericPrice = Number(
     pickFirstDefined(
@@ -119,49 +129,52 @@ export const transformProduct = (backendProduct) => {
     transformed.inStock,
     false
   );
-  const shopkeeperId = pickFirstDefined(
-    transformed.shopkeeperId,
-    transformed.ownerId,
-    transformed.sellerId,
-    transformed.vendorId,
-    transformed.userId
+  const imageUrl = pickFirstDefined(
+    transformed.imageUrl,
+    transformed.productImageUrl,
+    transformed.image,
+    transformed.productImage,
+    null
   );
+  const categoryName = pickFirstDefined(
+    transformed.categoryName,
+    transformed.productCategoryName,
+    transformed.category,
+    transformed.productCategory,
+    ''
+  );
+  const isAvailable = Boolean(available);
 
   return {
-    id: productId !== undefined && productId !== null ? productId.toString() : '',
+    productCategoryItemId: productCategoryItemId !== undefined && productCategoryItemId !== null
+      ? productCategoryItemId.toString()
+      : '',
+    productCategoryId: productCategoryId !== undefined && productCategoryId !== null
+      ? productCategoryId.toString()
+      : null,
     name: pickFirstDefined(transformed.productName, transformed.name, ''),
     price: Number.isFinite(numericPrice) ? numericPrice : 0,
-    category: pickFirstDefined(
-      transformed.categoryName,
-      transformed.productCategoryName,
-      transformed.category,
-      transformed.productCategory,
-      ''
-    ),
+    quantity: Number.isFinite(numericQuantity) ? numericQuantity : 0,
+    imageUrl,
+    preperationTimeMinutes: Number.isFinite(numericPreparationTime) ? numericPreparationTime : 0,
+    isAvailable,
+    dateAdded: pickFirstDefined(transformed.dateAdded, transformed.createdAt, null),
+    dateUpdated: pickFirstDefined(transformed.dateUpdated, transformed.updatedAt, null),
+    categoryName,
     description: pickFirstDefined(
       transformed.description,
       transformed.productDescription,
       transformed.details,
       ''
     ),
-    image: pickFirstDefined(
-      transformed.imageUrl,
-      transformed.productImageUrl,
-      transformed.image,
-      transformed.productImage,
-      null
-    ),
-    available: Boolean(available),
-    quantity: Number.isFinite(numericQuantity) ? numericQuantity : 0,
+    // Compatibility aliases for existing UI components
+    id: productCategoryItemId !== undefined && productCategoryItemId !== null
+      ? productCategoryItemId.toString()
+      : '',
+    category: categoryName,
+    image: imageUrl,
+    available: isAvailable,
     preparationTime: Number.isFinite(numericPreparationTime) ? numericPreparationTime : 0,
-    shopkeeperId: shopkeeperId !== undefined && shopkeeperId !== null ? shopkeeperId.toString() : null,
-    shopkeeperName: pickFirstDefined(
-      transformed.shopkeeperName,
-      transformed.shopName,
-      transformed.vendorName,
-      transformed.sellerName,
-      null
-    ),
   };
 };
 
@@ -223,17 +236,35 @@ export const transformDashboardStats = (backendStats) => {
 };
 
 export const transformCreateOrderRequest = (frontendOrder) => {
+  const pickupPoint = pickFirstDefined(frontendOrder.pickupPoint, frontendOrder.pickupLocation);
+  const destination = pickFirstDefined(frontendOrder.destination, frontendOrder.dropLocation);
+  const orderItems = (frontendOrder.items || frontendOrder.orderItems || [])
+    .map(item => {
+      const productCategoryItemId = toInteger(
+        pickFirstDefined(item.productCategoryItemId, item.id)
+      );
+
+      if (!productCategoryItemId) {
+        return null;
+      }
+
+      return {
+        productCategoryItemId,
+        quantity: toInteger(item.quantity) || 1,
+        price: Number(item.price) || 0,
+        discount: Number(item.discount) || 0,
+      };
+    })
+    .filter(Boolean);
+
   return {
-    pickupPoint: frontendOrder.pickupLocation || frontendOrder.pickupPoint,
-    destination: frontendOrder.dropLocation || frontendOrder.destination,
+    ...(pickupPoint ? { pickupPoint } : {}),
+    ...(destination ? { destination } : {}),
+    ...(frontendOrder.contactNumber ? { contactNumber: frontendOrder.contactNumber } : {}),
     paymentMethod: frontendOrder.paymentMethod || 'Cash',
     specialNotes: frontendOrder.orderNotes || frontendOrder.specialNotes,
     orderPickupType: frontendOrder.orderPickupType || 'Delivery',
-    orderItems: (frontendOrder.items || frontendOrder.orderItems || []).map(item => ({
-      productCategoryItemId: parseInt(item.productId, 10) || parseInt(item.productCategoryItemId, 10),
-      quantity: item.quantity,
-      discount: item.discount || 0,
-    })),
+    orderItems,
   };
 };
 

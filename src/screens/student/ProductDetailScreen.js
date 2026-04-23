@@ -19,6 +19,8 @@ const ProductDetailScreen = ({ route, navigation }) => {
   const { product } = route.params || {};
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(product?.price || 0);
+  const productImageUri = product?.imageUrl || product?.image;
+  const productCategoryItemId = product?.productCategoryItemId;
 
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
@@ -29,16 +31,17 @@ const ProductDetailScreen = ({ route, navigation }) => {
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !productCategoryItemId) {
+      Alert.alert('Error', 'Product details are incomplete.');
+      return;
+    }
 
     dispatch(addToCart({
       product: {
-        id: product.id,
+        productCategoryItemId,
         name: product.name,
         price: product.price,
-        image: product.image,
-        shopkeeperId: product.shopkeeperId,
-        shopkeeperName: product.shopkeeperName,
+        imageUrl: productImageUri,
       },
       quantity,
     }));
@@ -60,135 +63,137 @@ const ProductDetailScreen = ({ route, navigation }) => {
   };
 
   const handleBuyNow = () => {
+    if (!product || !productCategoryItemId) {
+      Alert.alert('Error', 'Product details are incomplete.');
+      return;
+    }
+
     const cartItem = {
-      ...product,
+      productCategoryItemId,
+      name: product.name,
+      price: product.price,
+      imageUrl: productImageUri,
       quantity,
       totalPrice,
     };
-    
-    // Navigate to checkout
-    navigation.navigate('Checkout', { 
+
+    navigation.navigate('Checkout', {
       items: [cartItem],
-      totalAmount: totalPrice + DELIVERY_CHARGE,
     });
   };
 
-  const renderQuantitySelector = () => {
-    return (
-      <View style={styles.quantityContainer}>
-        <Text style={styles.quantityLabel}>Quantity</Text>
-        <View style={styles.quantitySelector}>
-          <TouchableOpacity
-            style={styles.quantityButton}
-            onPress={() => handleQuantityChange(-1)}
-            disabled={quantity <= 1}
+  const renderQuantitySelector = () => (
+    <View style={styles.quantityContainer}>
+      <Text style={styles.quantityLabel}>Quantity</Text>
+      <View style={styles.quantitySelector}>
+        <TouchableOpacity
+          style={styles.quantityButton}
+          onPress={() => handleQuantityChange(-1)}
+          disabled={quantity <= 1}
+        >
+          <Text style={[
+            styles.quantityButtonText,
+            quantity <= 1 && styles.quantityButtonTextDisabled,
+          ]}
           >
-            <Text style={[
-              styles.quantityButtonText,
-              quantity <= 1 && styles.quantityButtonTextDisabled
-            ]}>
-              -
-            </Text>
-          </TouchableOpacity>
-          
-          <View style={styles.quantityValue}>
-            <Text style={styles.quantityNumber}>{quantity}</Text>
-          </View>
-          
-          <TouchableOpacity
-            style={styles.quantityButton}
-            onPress={() => handleQuantityChange(1)}
-            disabled={quantity >= 10}
-          >
-            <Text style={[
-              styles.quantityButtonText,
-              quantity >= 10 && styles.quantityButtonTextDisabled
-            ]}>
-              +
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
+            -
+          </Text>
+        </TouchableOpacity>
 
-  const renderPriceSection = () => {
-    return (
-      <View style={styles.priceSection}>
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Price per item:</Text>
-          <Text style={styles.priceValue}>PKR {product.price}</Text>
+        <View style={styles.quantityValue}>
+          <Text style={styles.quantityNumber}>{quantity}</Text>
         </View>
-        
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Subtotal:</Text>
-          <Text style={styles.priceValue}>PKR {totalPrice}</Text>
-        </View>
-        
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Delivery:</Text>
-          <Text style={styles.priceValue}>PKR {DELIVERY_CHARGE}</Text>
-        </View>
-        
-        <View style={[styles.priceRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalValue}>PKR {totalPrice + DELIVERY_CHARGE}</Text>
-        </View>
+
+        <TouchableOpacity
+          style={styles.quantityButton}
+          onPress={() => handleQuantityChange(1)}
+          disabled={quantity >= 10}
+        >
+          <Text style={[
+            styles.quantityButtonText,
+            quantity >= 10 && styles.quantityButtonTextDisabled,
+          ]}
+          >
+            +
+          </Text>
+        </TouchableOpacity>
       </View>
-    );
-  };
+    </View>
+  );
+
+  const renderPriceSection = () => (
+    <View style={styles.priceSection}>
+      <View style={styles.priceRow}>
+        <Text style={styles.priceLabel}>Price per item:</Text>
+        <Text style={styles.priceValue}>PKR {product.price}</Text>
+      </View>
+
+      <View style={styles.priceRow}>
+        <Text style={styles.priceLabel}>Subtotal:</Text>
+        <Text style={styles.priceValue}>PKR {totalPrice}</Text>
+      </View>
+
+      <View style={styles.priceRow}>
+        <Text style={styles.priceLabel}>Delivery:</Text>
+        <Text style={styles.priceValue}>PKR {DELIVERY_CHARGE}</Text>
+      </View>
+
+      <View style={[styles.priceRow, styles.totalRow]}>
+        <Text style={styles.totalLabel}>Total:</Text>
+        <Text style={styles.totalValue}>PKR {totalPrice + DELIVERY_CHARGE}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <Header title={product?.name || 'Product Details'} onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
-      <View style={styles.imageSection}>
-        {product?.image && typeof product.image === 'string' && product.image.startsWith('http') ? (
-          <Image source={{ uri: product.image }} style={styles.productImage} />
-        ) : (
-          <View style={styles.productImagePlaceholder}>
-            <Text style={styles.productEmoji}>{product?.image || '🍽️'}</Text>
-          </View>
-        )}
+        <View style={styles.imageSection}>
+          {productImageUri && typeof productImageUri === 'string' && productImageUri.startsWith('http') ? (
+            <Image source={{ uri: productImageUri }} style={styles.productImage} />
+          ) : (
+            <View style={styles.productImagePlaceholder}>
+              <Text style={styles.productImagePlaceholderText}>Product</Text>
+            </View>
+          )}
+        </View>
 
-      
-      </View>
+        <View style={styles.detailsSection}>
+          <Text style={styles.productName}>{product.name}</Text>
+          <Text style={styles.category}>{product.categoryName || product.category}</Text>
 
-      <View style={styles.detailsSection}>
-        <Text style={styles.productName}>{product.name}</Text>
-        <Text style={styles.category}>{product.category}</Text>
-        
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>
-          {product.description || 'No description available for this product.'}
-        </Text>
+          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.description}>
+            {product.description || 'No description available for this product.'}
+          </Text>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        {renderQuantitySelector()}
+          {renderQuantitySelector()}
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        {renderPriceSection()}
-      </View>
+          {renderPriceSection()}
+        </View>
 
-      <View style={styles.actionSection}>
-        <Button
-          title="Add to Cart"
-          onPress={handleAddToCart}
-          type="outline"
-          style={styles.addToCartButton}
-        />
-        
-        <Button
-          title="Buy Now"
-          onPress={handleBuyNow}
-          style={styles.buyNowButton}
-        />
-      </View>
-    </ScrollView>
+        <View style={styles.actionSection}>
+          <Button
+            title="Add to Cart"
+            onPress={handleAddToCart}
+            type="outline"
+            style={styles.addToCartButton}
+          />
+
+          <Button
+            title="Buy Now"
+            onPress={handleBuyNow}
+            style={styles.buyNowButton}
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -216,8 +221,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productEmoji: {
-    fontSize: 72,
+  productImagePlaceholderText: {
+    fontSize: SIZES.h3,
+    color: COLORS.gray,
+    fontWeight: '600',
   },
   detailsSection: {
     backgroundColor: COLORS.white,

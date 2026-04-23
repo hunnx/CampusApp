@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../../redux/slices/orderSlice';
@@ -18,13 +19,16 @@ const CheckoutScreen = ({ route, navigation }) => {
   const dispatch = useDispatch();
   const { isLoading } = useSelector(state => state.orders);
   const { user } = useSelector(state => state.auth);
-  
-  const { items, totalAmount } = route.params || { items: [], totalAmount: 0 };
-  
+  const { items } = route.params || { items: [] };
+
   const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [contactNumber, setContactNumber] = useState(user?.phone || '');
+  const [contactNumber, setContactNumber] = useState(user?.phoneNumber || user?.phone || '');
   const [orderNotes, setOrderNotes] = useState('');
   const [errors, setErrors] = useState({});
+
+  const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
+  const deliveryCharge = items.length > 0 ? DELIVERY_CHARGE : 0;
+  const finalTotal = subtotal + deliveryCharge;
 
   const validateForm = () => {
     const newErrors = {};
@@ -51,10 +55,8 @@ const CheckoutScreen = ({ route, navigation }) => {
       return;
     }
 
-    const pickupLocation = items[0]?.shopkeeperName || items[0]?.pickupLocation || '';
-
-    if (!pickupLocation) {
-      Alert.alert('Error', 'This product is missing shop information from the backend. Please reload products and try again.');
+    if (items.length === 0) {
+      Alert.alert('Error', 'Your cart is empty.');
       return;
     }
 
@@ -62,154 +64,153 @@ const CheckoutScreen = ({ route, navigation }) => {
       const orderData = {
         studentId: user.id,
         studentName: user.name,
-        shopkeeperId: items[0]?.shopkeeperId || null,
-        shopkeeperName: items[0]?.shopkeeperName || '',
+        pickupPoint: 'Shop', // Default pickup point for delivery orders
         items: items.map(item => ({
-          productId: item.id,
+          productCategoryItemId: item.productCategoryItemId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
         })),
-        totalAmount: totalAmount - DELIVERY_CHARGE, // Remove delivery charge from items total
-        deliveryCharge: DELIVERY_CHARGE,
-        pickupLocation,
-        dropLocation: deliveryAddress,
+        totalAmount: subtotal,
+        deliveryCharge,
+        destination: deliveryAddress,
         contactNumber,
         orderNotes,
       };
 
-      console.log('Creating order with shopkeeperId:', orderData.shopkeeperId, 'for user:', user.id);
-      
-      const newOrder = await dispatch(createOrder(orderData));
-      
-      console.log('Order created successfully:', newOrder);
-      
-      // Clear cart after successful order placement
+      await dispatch(createOrder(orderData)).unwrap();
       dispatch(clearCart());
-      
-      // Show success message
+
       Alert.alert(
         'Order Placed Successfully!',
         'Your order has been placed and will be prepared soon.',
         [
           {
             text: 'View Orders',
-            onPress: () => navigation.navigate('Orders')
-          }
+            onPress: () => navigation.navigate('Orders'),
+          },
         ]
       );
     } catch (error) {
       console.error('Order creation failed:', error);
-      Alert.alert('Error', 'Failed to place order. Please try again.');
+      Alert.alert('Error', error || 'Failed to place order. Please try again.');
     }
   };
 
-  const renderOrderItems = () => {
-    return items.map((item, index) => (
-      <View key={item.id} style={styles.orderItem}>
+  const renderOrderItems = () => (
+    items.map(item => (
+      <View key={item.productCategoryItemId} style={styles.orderItem}>
+        {(item.imageUrl || item.image) ? (
+          <Image
+            source={{ uri: item.imageUrl || item.image }}
+            style={styles.itemImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.itemImagePlaceholder} />
+        )}
+
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.name}</Text>
           <Text style={styles.itemDetails}>
-            {item.quantity}x PKR {item.price} = PKR {item.totalPrice}
+            {item.quantity}x PKR {item.price} = PKR {(item.totalPrice || (item.price * item.quantity))}
           </Text>
         </View>
       </View>
-    ));
-  };
+    ))
+  );
 
-  const renderPaymentMethod = () => {
-    return (
-      <View style={styles.paymentMethod}>
-        <Text style={styles.sectionTitle}>Payment Method</Text>
-        <View style={styles.paymentOption}>
-          <View style={[styles.paymentRadio, styles.paymentRadioSelected]} />
-          <Text style={styles.paymentText}>Cash on Delivery</Text>
-        </View>
-        <Text style={styles.paymentNote}>
-          Pay PKR {totalAmount} when your order is delivered
-        </Text>
+  const renderPaymentMethod = () => (
+    <View style={styles.paymentMethod}>
+      <Text style={styles.sectionTitle}>Payment Method</Text>
+      <View style={styles.paymentOption}>
+        <View style={[styles.paymentRadio, styles.paymentRadioSelected]} />
+        <Text style={styles.paymentText}>Cash on Delivery</Text>
       </View>
-    );
-  };
+      <Text style={styles.paymentNote}>
+        Pay PKR {finalTotal} when your order is delivered
+      </Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <Header title="Checkout" onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Order Items</Text>
-        {renderOrderItems()}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Delivery Information</Text>
-        
-        <Input
-          label="Delivery Address"
-          value={deliveryAddress}
-          onChangeText={setDeliveryAddress}
-          placeholder="Enter your delivery address"
-          multiline
-          numberOfLines={3}
-          error={errors.deliveryAddress}
-        />
-
-        <Input
-          label="Contact Number"
-          value={contactNumber}
-          onChangeText={setContactNumber}
-          placeholder="Enter your contact number"
-          keyboardType="phone-pad"
-          error={errors.contactNumber}
-        />
-
-        <Input
-          label="Order Notes (Optional)"
-          value={orderNotes}
-          onChangeText={setOrderNotes}
-          placeholder="Any special instructions for your order?"
-          multiline
-          numberOfLines={3}
-        />
-      </View>
-
-      {renderPaymentMethod()}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Order Summary</Text>
-        
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Subtotal</Text>
-          <Text style={styles.summaryValue}>PKR {totalAmount - DELIVERY_CHARGE}</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Items</Text>
+          {renderOrderItems()}
         </View>
-        
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Delivery</Text>
-          <Text style={styles.summaryValue}>PKR {DELIVERY_CHARGE}</Text>
-        </View>
-        
-        <View style={[styles.summaryRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total Amount</Text>
-          <Text style={styles.totalValue}>PKR {totalAmount}</Text>
-        </View>
-      </View>
 
-      <View style={styles.actions}>
-        <Button
-          title="Place Order • PKR {totalAmount}"
-          onPress={handlePlaceOrder}
-          loading={isLoading}
-          style={styles.placeOrderButton}
-        />
-        
-        <Button
-          title="Back to Cart"
-          onPress={() => navigation.goBack()}
-          type="outline"
-          style={styles.backButton}
-        />
-      </View>
-    </ScrollView>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Delivery Information</Text>
+
+          <Input
+            label="Delivery Address"
+            value={deliveryAddress}
+            onChangeText={setDeliveryAddress}
+            placeholder="Enter your delivery address"
+            multiline
+            numberOfLines={3}
+            error={errors.deliveryAddress}
+          />
+
+          <Input
+            label="Contact Number"
+            value={contactNumber}
+            onChangeText={setContactNumber}
+            placeholder="Enter your contact number"
+            keyboardType="phone-pad"
+            error={errors.contactNumber}
+          />
+
+          <Input
+            label="Order Notes (Optional)"
+            value={orderNotes}
+            onChangeText={setOrderNotes}
+            placeholder="Any special instructions for your order?"
+            multiline
+            numberOfLines={3}
+          />
+        </View>
+
+        {renderPaymentMethod()}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Summary</Text>
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryValue}>PKR {subtotal}</Text>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Delivery</Text>
+            <Text style={styles.summaryValue}>PKR {deliveryCharge}</Text>
+          </View>
+
+          <View style={[styles.summaryRow, styles.totalRow]}>
+            <Text style={styles.totalLabel}>Total Amount</Text>
+            <Text style={styles.totalValue}>PKR {finalTotal}</Text>
+          </View>
+        </View>
+
+        <View style={styles.actions}>
+          <Button
+            title={`Place Order (PKR ${finalTotal})`}
+            onPress={handlePlaceOrder}
+            loading={isLoading}
+            style={styles.placeOrderButton}
+          />
+
+          <Button
+            title="Back to Cart"
+            onPress={() => navigation.goBack()}
+            type="outline"
+            style={styles.backButton}
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -222,13 +223,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: SIZES.padding,
     paddingBottom: SIZES.padding * 2,
-  },
-  title: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: SIZES.padding,
-    textAlign: 'center',
   },
   section: {
     backgroundColor: COLORS.white,
@@ -244,11 +238,23 @@ const styles = StyleSheet.create({
   },
   orderItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: SIZES.base,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.light,
+  },
+  itemImage: {
+    width: 48,
+    height: 48,
+    borderRadius: SIZES.radius,
+    marginRight: SIZES.base,
+  },
+  itemImagePlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: SIZES.radius,
+    marginRight: SIZES.base,
+    backgroundColor: COLORS.light,
   },
   itemInfo: {
     flex: 1,

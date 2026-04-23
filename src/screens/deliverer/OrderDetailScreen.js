@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
-  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, updateOrderStatus } from '../../redux/slices/orderSlice';
@@ -21,31 +19,25 @@ const OrderDetailScreen = ({ route, navigation }) => {
   
   const { orderId } = route.params || {};
   const [order, setOrder] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadOrderDetails();
-  }, [orderId]);
-
-  const loadOrderDetails = async () => {
+  const loadOrderDetails = useCallback(async () => {
     try {
-      await dispatch(fetchOrders({ 
+      const fetchedOrders = await dispatch(fetchOrders({
         userId: user?.id, 
         userRole: user?.role 
       })).unwrap();
-      
-      const foundOrder = orders.find(o => o.id === orderId);
-      setOrder(foundOrder);
+
+      const foundOrder = fetchedOrders.find(o => String(o.id) === String(orderId)) ||
+        orders.find(o => String(o.id) === String(orderId));
+      setOrder(foundOrder || null);
     } catch (error) {
       console.error('Failed to load order details:', error);
     }
-  };
+  }, [dispatch, orderId, orders, user?.id, user?.role]);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadOrderDetails();
-    setRefreshing(false);
-  };
+  useEffect(() => {
+    loadOrderDetails();
+  }, [loadOrderDetails]);
 
   const handleStatusUpdate = async (newStatus) => {
     try {
@@ -64,10 +56,6 @@ const OrderDetailScreen = ({ route, navigation }) => {
     } catch (error) {
       Alert.alert('Error', 'Failed to update order status');
     }
-  };
-
-  const handleNavigateToMap = () => {
-    navigation.navigate('DeliveryMap', { orderId });
   };
 
   const getStatusColor = (status) => {
@@ -102,10 +90,12 @@ const OrderDetailScreen = ({ route, navigation }) => {
           <Text style={styles.infoValue}>{order.studentName}</Text>
         </View>
         
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Shop:</Text>
-          <Text style={styles.infoValue}>{order.shopkeeperName}</Text>
-        </View>
+        {order.shopkeeperName ? (
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Shop:</Text>
+            <Text style={styles.infoValue}>{order.shopkeeperName}</Text>
+          </View>
+        ) : null}
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Contact:</Text>

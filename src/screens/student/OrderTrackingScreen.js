@@ -1,53 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchOrders } from '../../redux/slices/orderSlice';
+import { useSelector } from 'react-redux';
 import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 
 const OrderTrackingScreen = ({ route, navigation }) => {
-  const dispatch = useDispatch();
   const { orders } = useSelector(state => state.orders);
-  const { user } = useSelector(state => state.auth);
   
   const { orderId } = route.params || {};
   const [order, setOrder] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+
+  const loadOrderDetails = useCallback(() => {
+    const foundOrder = orders.find(o => String(o.id) === String(orderId));
+    setOrder(foundOrder);
+  }, [orderId, orders]);
 
   useEffect(() => {
     loadOrderDetails();
-  }, [orderId, orders]);
-
-  const loadOrderDetails = () => {
-    console.log('OrderTrackingScreen - Loading order details for orderId:', orderId);
-    console.log('OrderTrackingScreen - Current orders:', orders);
-    
-    // Find order from existing Redux state instead of fetching
-    const foundOrder = orders.find(o => o.id === orderId);
-    console.log('OrderTrackingScreen - Found order:', foundOrder);
-    setOrder(foundOrder);
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await dispatch(fetchOrders({ 
-        userId: user?.id, 
-        userRole: user?.role 
-      }));
-    } catch (error) {
-      console.error('Failed to refresh orders:', error);
-    }
-    setRefreshing(false);
-  };
+  }, [loadOrderDetails]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -167,10 +144,12 @@ const OrderTrackingScreen = ({ route, navigation }) => {
           <Text style={styles.infoValue}>#{String(order.id).slice(-6)}</Text>
         </View>
         
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Shop:</Text>
-          <Text style={styles.infoValue}>{order.shopkeeperName}</Text>
-        </View>
+        {order.shopkeeperName ? (
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Shop:</Text>
+            <Text style={styles.infoValue}>{order.shopkeeperName}</Text>
+          </View>
+        ) : null}
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Pickup Location:</Text>

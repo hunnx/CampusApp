@@ -39,7 +39,7 @@ export const fetchProducts = createAsyncThunk(
 
 export const fetchMyProducts = createAsyncThunk(
   'products/fetchMyProducts',
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { rejectWithValue }) => {
     try {
       let response;
 
@@ -49,17 +49,7 @@ export const fetchMyProducts = createAsyncThunk(
         response = await api.get('/products');
       }
 
-      let transformedProducts = normalizeProductsPayload(response).map(transformProduct);
-      const currentUserId = getState()?.auth?.user?.id;
-      const hasOwnershipData = transformedProducts.some(product => product.shopkeeperId);
-
-      if (currentUserId && hasOwnershipData) {
-        transformedProducts = transformedProducts.filter(
-          product => String(product.shopkeeperId) === String(currentUserId)
-        );
-      }
-
-      return transformedProducts;
+      return normalizeProductsPayload(response).map(transformProduct);
     } catch (error) {
       return rejectWithValue(getProductErrorMessage(error, 'Failed to fetch your products'));
     }
@@ -172,7 +162,10 @@ const productSlice = createSlice({
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.isLoading = false;
-        const index = state.products.findIndex(product => product.id === action.payload.id);
+        const updatedProductId = action.payload.productCategoryItemId || action.payload.id;
+        const index = state.products.findIndex(
+          product => String(product.productCategoryItemId || product.id) === String(updatedProductId)
+        );
 
         if (index !== -1) {
           state.products[index] = action.payload;
