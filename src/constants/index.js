@@ -1,5 +1,6 @@
 // App Constants
-export const API_ORIGIN = 'https://localhost:7200';
+// export const API_ORIGIN = 'https://localhost:7200';
+export const API_ORIGIN = 'https://handiness-sprang-elude.ngrok-free.dev';
 export const API_BASE_URL = `${API_ORIGIN}/api`;
 export const SOCKET_BASE_URL = API_ORIGIN;
 
