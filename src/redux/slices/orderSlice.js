@@ -87,7 +87,7 @@ export const fetchOrders = createAsyncThunk(
       } else if (userRole === 'shopkeeper') {
         endpoint = '/Orders/shopkeeper';
       } else if (userRole === 'deliverer') {
-        endpoint = '/Orders/deliverer';
+        endpoint = '/Orders/available';
       }
 
       if (!endpoint) {
@@ -151,6 +151,18 @@ export const acceptOrder = createAsyncThunk(
       return transformedOrder;
     } catch (error) {
       return rejectWithValue(getOrderErrorMessage(error, 'Failed to accept order'));
+    }
+  }
+);
+
+export const fetchDelivererAssignedOrders = createAsyncThunk(
+  'orders/fetchDelivererAssignedOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/Orders/deliverer');
+      return normalizeOrdersPayload(response).map(transformOrder);
+    } catch (error) {
+      return rejectWithValue(getOrderErrorMessage(error, 'Failed to fetch deliverer orders'));
     }
   }
 );
@@ -254,6 +266,20 @@ const orderSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchShopkeeperOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.orders = [];
+        state.error = action.payload;
+      })
+      .addCase(fetchDelivererAssignedOrders.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchDelivererAssignedOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orders = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchDelivererAssignedOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.orders = [];
         state.error = action.payload;
