@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchOrders } from '../../redux/slices/orderSlice';
+import { fetchDelivererAssignedOrders } from '../../redux/slices/orderSlice';
 import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
@@ -29,10 +29,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
 
   const loadOrders = async () => {
     try {
-      await dispatch(fetchOrders({ 
-        userId: user?.id, 
-        userRole: user?.role 
-      })).unwrap();
+      await dispatch(fetchDelivererAssignedOrders()).unwrap();
     } catch (error) {
       console.error('Failed to load orders:', error);
     }
