@@ -70,6 +70,9 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
         status: newStatus 
       }));
       
+      // Auto-switch to the new status tab
+      setSelectedFilter(newStatus);
+      
       Alert.alert(
         'Success',
         `Order status updated to ${newStatus}`
