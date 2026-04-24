@@ -65,6 +65,8 @@ const CheckoutScreen = ({ route, navigation }) => {
         studentId: user.id,
         studentName: user.name,
         pickupPoint: 'Shop', // Default pickup point for delivery orders
+        paymentMethod: 'Cash', // Default payment method
+        orderPickupType: 'Delivery', // Default order pickup type
         items: items.map(item => ({
           productCategoryItemId: item.productCategoryItemId,
           name: item.name,
@@ -78,7 +80,7 @@ const CheckoutScreen = ({ route, navigation }) => {
         orderNotes,
       };
 
-      await dispatch(createOrder(orderData)).unwrap();
+      const result = await dispatch(createOrder(orderData)).unwrap();
       dispatch(clearCart());
 
       Alert.alert(
@@ -87,7 +89,12 @@ const CheckoutScreen = ({ route, navigation }) => {
         [
           {
             text: 'View Orders',
-            onPress: () => navigation.navigate('Orders'),
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Orders' }],
+              });
+            },
           },
         ]
       );

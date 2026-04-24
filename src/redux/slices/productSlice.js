@@ -29,7 +29,7 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/products');
+      const response = await api.get('/Products');
       return normalizeProductsPayload(response).map(transformProduct);
     } catch (error) {
       return rejectWithValue(getProductErrorMessage(error, 'Failed to fetch products'));
@@ -44,9 +44,9 @@ export const fetchMyProducts = createAsyncThunk(
       let response;
 
       try {
-        response = await api.get('/products/my');
+        response = await api.get('/Products/my');
       } catch {
-        response = await api.get('/products');
+        response = await api.get('/Products');
       }
 
       return normalizeProductsPayload(response).map(transformProduct);
@@ -60,7 +60,7 @@ export const addProduct = createAsyncThunk(
   'products/addProduct',
   async (productData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/products', {
+      const response = await api.post('/Products', {
         productCategoryId: productData.categoryId || 1,
         name: productData.name,
         price: productData.price,
@@ -81,7 +81,7 @@ export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, productData }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/products/${id}`, {
+      const response = await api.put(`/Products/${id}`, {
         name: productData.name,
         price: productData.price,
         quantity: productData.quantity,

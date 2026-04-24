@@ -7,11 +7,11 @@ import { transformAuthResponse } from '../../utils/dataTransformers';
 
 // Async thunks
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  'Auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
       console.log('Attempting login with:', credentials.email);
-      const response = await api.post('/auth/login', {
+      const response = await api.post('/Auth/login', {
         emailAddress: credentials.email,
         password: credentials.password,
       });
@@ -50,10 +50,10 @@ export const loginUser = createAsyncThunk(
 );
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  'Auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/users', {
+      const response = await api.post('/Users', {
         firstName: userData.name?.split(' ')[0] || '',
         lastName: userData.name?.split(' ').slice(1).join(' ') || '',
         emailAddress: userData.email,

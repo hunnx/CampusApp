@@ -251,16 +251,16 @@ export const transformCreateOrderRequest = (frontendOrder) => {
       return {
         productCategoryItemId,
         quantity: toInteger(item.quantity) || 1,
-        price: Number(item.price) || 0,
         discount: Number(item.discount) || 0,
       };
     })
     .filter(Boolean);
 
   return {
-    ...(pickupPoint ? { pickupPoint } : {}),
+    customerId: toInteger(pickFirstDefined(frontendOrder.studentId, frontendOrder.customerId)),
+    pickupPoint: pickupPoint || 'Shop',
     ...(destination ? { destination } : {}),
-    ...(frontendOrder.contactNumber ? { contactNumber: frontendOrder.contactNumber } : {}),
+    contactNumber: frontendOrder.contactNumber || '',
     paymentMethod: frontendOrder.paymentMethod || 'Cash',
     specialNotes: frontendOrder.orderNotes || frontendOrder.specialNotes,
     orderPickupType: frontendOrder.orderPickupType || 'Delivery',

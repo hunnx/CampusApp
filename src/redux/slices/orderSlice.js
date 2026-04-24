@@ -43,10 +43,20 @@ const emitIfConnected = (eventName, payload) => {
 
 export const createOrder = createAsyncThunk(
   'orders/createOrder',
-  async (orderData, { rejectWithValue }) => {
+  async (orderData, { rejectWithValue, getState }) => {
     try {
-      const backendRequest = transformCreateOrderRequest(orderData);
-      const response = await api.post('/orders', backendRequest);
+      // Get user ID from auth state and attach to order data
+      const state = getState();
+      const userId = state.auth.user?.id;
+      
+      // Attach customer ID to order data
+      const orderDataWithCustomerId = {
+        ...orderData,
+        customerId: userId || orderData.customerId || orderData.studentId
+      };
+      
+      const backendRequest = transformCreateOrderRequest(orderDataWithCustomerId);
+      const response = await api.post('/Orders', backendRequest);
       const transformedOrder = transformOrder(response);
 
       emitIfConnected('newOrder', transformedOrder);
@@ -65,11 +75,11 @@ export const fetchOrders = createAsyncThunk(
       let endpoint = '';
 
       if (userRole === 'student') {
-        endpoint = '/orders/user';
+        endpoint = '/Orders/user';
       } else if (userRole === 'shopkeeper') {
-        endpoint = '/orders/shopkeeper';
+        endpoint = '/Orders/shopkeeper';
       } else if (userRole === 'deliverer') {
-        endpoint = '/orders/deliverer';
+        endpoint = '/Orders/deliverer';
       }
 
       if (!endpoint) {
@@ -89,7 +99,7 @@ export const updateOrderStatus = createAsyncThunk(
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
       const backendRequest = transformUpdateStatusRequest(status);
-      const response = await api.put(`/orders/${orderId}/status`, backendRequest);
+      const response = await api.put(`/Orders/${orderId}/status`, backendRequest);
       const transformedOrder = transformOrder(response);
 
       emitIfConnected('orderStatusUpdate', { orderId, status });
@@ -105,7 +115,7 @@ export const fetchShopkeeperOrders = createAsyncThunk(
   'orders/fetchShopkeeperOrders',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/orders/shopkeeper');
+      const response = await api.get('/Orders/shopkeeper');
       return normalizeOrdersPayload(response).map(transformOrder);
     } catch (error) {
       return rejectWithValue(getOrderErrorMessage(error, 'Failed to fetch shopkeeper orders'));
@@ -118,7 +128,7 @@ export const acceptOrder = createAsyncThunk(
   async ({ orderId, delivererId }, { rejectWithValue }) => {
     try {
       const requestData = delivererId ? { delivererId } : undefined;
-      const response = await api.post(`/orders/${orderId}/accept`, requestData);
+      const response = await api.post(`/Orders/${orderId}/accept`, requestData);
       const transformedOrder = transformOrder(response);
 
       emitIfConnected('orderAccepted', { orderId, delivererId });

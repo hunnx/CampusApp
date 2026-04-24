@@ -25,8 +25,8 @@ export const setAuthToken = (token) => {
 api.interceptors.request.use(
   (config) => {
     // Don't add auth token for login and register endpoints
-    const isAuthEndpoint = config.url?.includes('/auth/login') ||
-                          config.url?.includes('/auth/register') ||
+    const isAuthEndpoint = config.url?.includes('/Auth/login') ||
+                          config.url?.includes('/Users') ||
                           config.url?.includes('/users');
 
     if (authToken && !isAuthEndpoint) {

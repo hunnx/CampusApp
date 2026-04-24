@@ -87,7 +87,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   const fetchDashboardStats = async () => {
     try {
       setLoadingStats(true);
-      const response = await api.get('/dashboard/stats');
+      const response = await api.get('/Dashboard/stats');
       const transformedStats = transformDashboardStats(response);
       setDashboardStats(transformedStats);
     } catch (error) {
