@@ -79,37 +79,6 @@ const LoginScreen = ({ navigation }) => {
             />
           </View>
 
-            {/* Role Selection */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Login as Role</Text>
-              <View style={styles.roleContainer}>
-                {[
-                  { key: 'student', label: '🎓 Student', emoji: '🎓' },
-                  { key: 'shopkeeper', label: '🏪 Shopkeeper', emoji: '🏪' },
-                  { key: 'deliverer', label: '🚴 Deliverer', emoji: '🚴' },
-                ].map((role) => (
-                  <TouchableOpacity
-                    key={role.key}
-                    style={[
-                      styles.roleOption,
-                      selectedRole === role.key && styles.selectedRole,
-                    ]}
-                    onPress={() => setSelectedRole(role.key)}
-                  >
-                    <Text style={styles.roleEmoji}>{role.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.roleLabel,
-                        selectedRole === role.key && styles.selectedRoleLabel,
-                      ]}
-                    >
-                      {role.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.disabledButton]}
             onPress={handleLogin}
@@ -204,6 +173,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     fontSize: 16,
+    color: '#333333',
   },
   loginButton: {
     backgroundColor: '#ffffff',
