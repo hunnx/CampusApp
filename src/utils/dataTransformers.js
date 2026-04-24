@@ -152,6 +152,7 @@ export const transformProduct = (backendProduct) => {
     productCategoryId: productCategoryId !== undefined && productCategoryId !== null
       ? productCategoryId.toString()
       : null,
+    shopkeeperId: transformed.shopkeeperId?.toString() || transformed.shopkeeperId,
     name: pickFirstDefined(transformed.productName, transformed.name, ''),
     price: Number.isFinite(numericPrice) ? numericPrice : 0,
     quantity: Number.isFinite(numericQuantity) ? numericQuantity : 0,

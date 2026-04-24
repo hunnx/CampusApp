@@ -72,6 +72,7 @@ const CheckoutScreen = ({ route, navigation }) => {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
+          shopkeeperId: item.shopkeeperId,
         })),
         totalAmount: subtotal,
         deliveryCharge,
@@ -79,6 +80,9 @@ const CheckoutScreen = ({ route, navigation }) => {
         contactNumber,
         orderNotes,
       };
+
+      console.log('CheckoutScreen - Creating order with data:', JSON.stringify(orderData, null, 2));
+      console.log('CheckoutScreen - Items with shopkeeperId:', items.map(i => ({ id: i.productCategoryItemId, shopkeeperId: i.shopkeeperId })));
 
       const result = await dispatch(createOrder(orderData)).unwrap();
       dispatch(clearCart());

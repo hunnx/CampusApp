@@ -25,19 +25,30 @@ export const login = async (email, password) => {
 
 export const register = async (userData) => {
   try {
+    console.log('🚀 Registration API Call - Request Payload:', JSON.stringify(userData, null, 2));
+
     const res = await fetch(`${API_BASE_URL}/Users`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+      },
       body: JSON.stringify(userData),
     });
 
+    console.log('📡 Registration API Response - Status:', res.status);
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Registration failed');
+      console.error('❌ Registration Error Response:', err);
+      throw new Error(err.error || err.message || 'Registration failed');
     }
 
-    return res.json();
+    const data = await res.json();
+    console.log('✅ Registration Success Response:', data);
+    return data;
   } catch (error) {
+    console.error('❌ Registration Error:', error.message);
     throw error;
   }
 };

@@ -48,21 +48,29 @@ export const createOrder = createAsyncThunk(
       // Get user ID from auth state and attach to order data
       const state = getState();
       const userId = state.auth.user?.id;
-      
+
       // Attach customer ID to order data
       const orderDataWithCustomerId = {
         ...orderData,
         customerId: userId || orderData.customerId || orderData.studentId
       };
-      
+
+      console.log('orderSlice - createOrder - orderDataWithCustomerId:', JSON.stringify(orderDataWithCustomerId, null, 2));
+
       const backendRequest = transformCreateOrderRequest(orderDataWithCustomerId);
+      console.log('orderSlice - createOrder - backendRequest:', JSON.stringify(backendRequest, null, 2));
+
       const response = await api.post('/Orders', backendRequest);
+      console.log('orderSlice - createOrder - backend response:', JSON.stringify(response, null, 2));
+
       const transformedOrder = transformOrder(response);
+      console.log('orderSlice - createOrder - transformedOrder:', JSON.stringify(transformedOrder, null, 2));
 
       emitIfConnected('newOrder', transformedOrder);
 
       return transformedOrder;
     } catch (error) {
+      console.error('orderSlice - createOrder - error:', error);
       return rejectWithValue(getOrderErrorMessage(error, 'Failed to create order'));
     }
   }
@@ -115,9 +123,16 @@ export const fetchShopkeeperOrders = createAsyncThunk(
   'orders/fetchShopkeeperOrders',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('orderSlice - fetchShopkeeperOrders - fetching orders from /Orders/shopkeeper');
       const response = await api.get('/Orders/shopkeeper');
-      return normalizeOrdersPayload(response).map(transformOrder);
+      console.log('orderSlice - fetchShopkeeperOrders - raw response:', JSON.stringify(response, null, 2));
+      const normalized = normalizeOrdersPayload(response);
+      console.log('orderSlice - fetchShopkeeperOrders - normalized:', JSON.stringify(normalized, null, 2));
+      const transformed = normalized.map(transformOrder);
+      console.log('orderSlice - fetchShopkeeperOrders - transformed orders:', JSON.stringify(transformed, null, 2));
+      return transformed;
     } catch (error) {
+      console.error('orderSlice - fetchShopkeeperOrders - error:', error);
       return rejectWithValue(getOrderErrorMessage(error, 'Failed to fetch shopkeeper orders'));
     }
   }

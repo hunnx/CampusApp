@@ -12,52 +12,125 @@ import {
 } from 'react-native';
 import Header from '../../components/common/Header';
 import { COLORS, SIZES } from '../../constants';
+import { register } from '../../services/authService';
 
 const RegisterScreen = ({ navigation }) => {
-  // Dummy credentials for testing
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'user@campusconnect.com',
-    password: '123456',
-    confirmPassword: '123456',
-    role: 'student', // 'student', 'shopkeeper', 'deliverer'
+    firstName: '',
+    lastName: '',
+    emailAddress: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
+    roleName: 'Student', // 'Student', 'Shopkeeper', 'Deliverer'
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
-    const { name, email, password, confirmPassword } = formData;
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const handleRegister = async () => {
+    const { firstName, lastName, emailAddress, phoneNumber, password, confirmPassword, roleName } = formData;
+
+    // Trim whitespace from all fields
+    const trimmedData = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      emailAddress: emailAddress.trim(),
+      phoneNumber: phoneNumber.trim(),
+      password: password.trim(),
+      confirmPassword: confirmPassword.trim(),
+      roleName: roleName,
+    };
+
+    // Validation
+    if (!trimmedData.firstName || !trimmedData.lastName) {
+      Alert.alert('Error', 'Please enter both first and last name');
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (!trimmedData.emailAddress) {
+      Alert.alert('Error', 'Please enter your email address');
       return;
     }
 
-    if (password.length < 6) {
+    if (!validateEmail(trimmedData.emailAddress)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    if (!trimmedData.password) {
+      Alert.alert('Error', 'Please enter a password');
+      return;
+    }
+
+    if (trimmedData.password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
 
+    if (trimmedData.password !== trimmedData.confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
     setIsLoading(true);
-    
-    // Simulate registration API call
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      Alert.alert('Success', 'Registration successful! Logging you in...', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Auto-login with selected role
-            handleLogin(formData.role);
+
+    try {
+      console.log('📝 Starting registration process for:', trimmedData.emailAddress);
+
+      // Prepare payload matching backend API
+      const payload = {
+        firstName: trimmedData.firstName,
+        lastName: trimmedData.lastName,
+        emailAddress: trimmedData.emailAddress,
+        password: trimmedData.password,
+        roleName: trimmedData.roleName,
+        phoneNumber: trimmedData.phoneNumber || '',
+        profilePictureUrl: '',
+        isActive: true,
+      };
+
+      console.log('🚀 Sending registration request:', JSON.stringify(payload, null, 2));
+
+      const response = await register(payload);
+
+      console.log('✅ Registration successful:', response);
+
+      Alert.alert(
+        'Success',
+        'User registered successfully! Please log in.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.navigate('Login');
+            },
           },
-        },
-      ]);
-    }, 1500);
+        ]
+      );
+
+      // Clear form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        emailAddress: '',
+        phoneNumber: '',
+        password: '',
+        confirmPassword: '',
+        roleName: 'Student',
+      });
+    } catch (error) {
+      console.error('❌ Registration failed:', error.message);
+      Alert.alert(
+        'Registration Failed',
+        error.message || 'An error occurred during registration. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateFormData = (field, value) => {
@@ -78,13 +151,26 @@ const RegisterScreen = ({ navigation }) => {
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={styles.inputLabel}>First Name</Text>
               <TextInput
                 style={styles.input}
-                placeholder="John Doe"
+                placeholder="John"
                 placeholderTextColor="#999"
-                value={formData.name}
-                onChangeText={(value) => updateFormData('name', value)}
+                value={formData.firstName}
+                onChangeText={(value) => updateFormData('firstName', value)}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Doe"
+                placeholderTextColor="#999"
+                value={formData.lastName}
+                onChangeText={(value) => updateFormData('lastName', value)}
+                autoCapitalize="words"
               />
             </View>
 
@@ -92,12 +178,24 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="user@campusconnect.com"
+                placeholder="user@example.com"
                 placeholderTextColor="#999"
-                value={formData.email}
-                onChangeText={(value) => updateFormData('email', value)}
+                value={formData.emailAddress}
+                onChangeText={(value) => updateFormData('emailAddress', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Phone Number (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="+1234567890"
+                placeholderTextColor="#999"
+                value={formData.phoneNumber}
+                onChangeText={(value) => updateFormData('phoneNumber', value)}
+                keyboardType="phone-pad"
               />
             </View>
 
@@ -105,7 +203,7 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={styles.inputLabel}>Password</Text>
               <TextInput
                 style={styles.input}
-                placeholder="123456"
+                placeholder="Min 6 characters"
                 placeholderTextColor="#999"
                 value={formData.password}
                 onChangeText={(value) => updateFormData('password', value)}
@@ -117,7 +215,7 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={styles.inputLabel}>Confirm Password</Text>
               <TextInput
                 style={styles.input}
-                placeholder="123456"
+                placeholder="Min 6 characters"
                 placeholderTextColor="#999"
                 value={formData.confirmPassword}
                 onChangeText={(value) => updateFormData('confirmPassword', value)}
@@ -130,23 +228,23 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={styles.inputLabel}>Select Role</Text>
               <View style={styles.roleContainer}>
                 {[
-                  { key: 'student', label: '🎓 Student', emoji: '🎓' },
-                  { key: 'shopkeeper', label: '🏪 Shopkeeper', emoji: '🏪' },
-                  { key: 'deliverer', label: '🚴 Deliverer', emoji: '🚴' },
+                  { key: 'Student', label: '🎓 Student', emoji: '🎓' },
+                  { key: 'Shopkeeper', label: '🏪 Shopkeeper', emoji: '🏪' },
+                  { key: 'Deliverer', label: '🚴 Deliverer', emoji: '🚴' },
                 ].map((role) => (
                   <TouchableOpacity
                     key={role.key}
                     style={[
                       styles.roleOption,
-                      formData.role === role.key && styles.selectedRole,
+                      formData.roleName === role.key && styles.selectedRole,
                     ]}
-                    onPress={() => updateFormData('role', role.key)}
+                    onPress={() => updateFormData('roleName', role.key)}
                   >
                     <Text style={styles.roleEmoji}>{role.emoji}</Text>
                     <Text
                       style={[
                         styles.roleLabel,
-                        formData.role === role.key && styles.selectedRoleLabel,
+                        formData.roleName === role.key && styles.selectedRoleLabel,
                       ]}
                     >
                       {role.label}
@@ -226,6 +324,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     fontSize: 16,
+    color: '#1C1917',
   },
   registerButton: {
     backgroundColor: '#ffffff',

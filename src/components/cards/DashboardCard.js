@@ -49,7 +49,6 @@ const DashboardCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius,
     padding: SIZES.padding,

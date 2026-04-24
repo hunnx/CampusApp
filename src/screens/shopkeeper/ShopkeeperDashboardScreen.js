@@ -72,10 +72,11 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
     try {
       if (user?.id) {
         console.log('Loading dashboard data for shopkeeper:', user.id);
-        
+
         // Fetch orders
-        await dispatch(fetchShopkeeperOrders(user.id));
-        
+        const ordersResult = await dispatch(fetchShopkeeperOrders(user.id));
+        console.log('Dashboard - Orders fetched:', ordersResult);
+
         // Fetch dashboard stats from backend
         await fetchDashboardStats();
       }
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginTop: -20,
+    marginTop: 16,
     marginBottom: 24,
   },
   dashboardCard: {
