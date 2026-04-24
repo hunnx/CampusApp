@@ -54,22 +54,33 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   const getFilteredOrders = () => {
-    let filtered = orders;
-    
-    if (selectedFilter !== 'All') {
-      filtered = filtered.filter(order => order.status === selectedFilter);
-    }
-    
-    return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const list = Array.isArray(orders) ? orders : [];
+
+    const filtered = selectedFilter === 'All'
+      ? list
+      : list.filter((order) => {
+          const orderStatus = (order?.status || '').toString().toLowerCase();
+          const filterKey = String(selectedFilter || '').toLowerCase();
+          return orderStatus === filterKey;
+        });
+
+    return filtered.slice().sort((a, b) => {
+      const dateA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
   };
 
   const getStatusCount = (status) => {
-    return orders.filter(order => order.status === status).length;
+    const ordersArray = Array.isArray(orders) ? orders : [];
+    const s = String(status || '').toLowerCase();
+    return ordersArray.filter(order => String(order?.status || '').toLowerCase() === s).length;
   };
 
   const renderFilterTabs = () => {
+    const ordersArray = Array.isArray(orders) ? orders : [];
     const filters = [
-      { key: 'All', label: 'All', count: orders.length },
+      { key: 'All', label: 'All', count: ordersArray.length },
       { key: ORDER_STATUS.PENDING, label: 'Pending', count: getStatusCount(ORDER_STATUS.PENDING) },
       { key: ORDER_STATUS.PREPARING, label: 'Preparing', count: getStatusCount(ORDER_STATUS.PREPARING) },
       { key: ORDER_STATUS.READY, label: 'Ready', count: getStatusCount(ORDER_STATUS.READY) },
@@ -118,42 +129,7 @@ const OrdersScreen = ({ navigation }) => {
     );
   };
 
-  const renderOrders = () => {
-    const filteredOrders = getFilteredOrders();
-
-    if (filteredOrders.length === 0) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            {selectedFilter === 'All' 
-              ? 'No orders yet. Start shopping!' 
-              : `No ${selectedFilter.toLowerCase()} orders`}
-          </Text>
-        </View>
-      );
-    }
-
-    return (
-      <FlatList
-        data={filteredOrders}
-        keyExtractor={(item) => String(item.id)}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => (
-          <OrderCard
-            order={item}
-            onPress={handleOrderPress}
-            showActions={false}
-            style={styles.orderCard}
-          />
-        )}
-        contentContainerStyle={styles.ordersContent}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        ListEmptyComponent={renderEmptyState}
-      />
-    );
-  };
+  // Note: main FlatList is rendered below; helper removed to avoid duplicate lists
 
   const renderEmptyState = () => {
     return (
@@ -175,25 +151,28 @@ const OrdersScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="My Orders" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{orders.length} total orders</Text>} />
+      <Header title="My Orders" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{Array.isArray(orders) ? orders.length : 0} total orders</Text>} />
 
       <FlatList
         data={getFilteredOrders()}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item, index) => String(item?.id || index)}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => (
-          <OrderCard
-            order={item}
-            onPress={handleOrderPress}
-            showActions={false}
-            style={styles.orderCard}
-          />
-        )}
+        renderItem={({ item }) => {
+          if (!item) return null;
+          return (
+            <OrderCard
+              order={item}
+              onPress={handleOrderPress}
+              showActions={false}
+              style={styles.orderCard}
+            />
+          );
+        }}
         contentContainerStyle={[
           styles.ordersContent,
           // Center empty state when no orders
-          orders.length === 0 && { flex: 1 },
+          Array.isArray(orders) && orders.length === 0 && { flex: 1 },
         ]}
         refreshing={refreshing}
         onRefresh={onRefresh}
