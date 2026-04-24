@@ -26,6 +26,7 @@ const ProductsScreen = ({ navigation }) => {
   }, [dispatch]);
 
   const handleAddProduct = () => {
+    console.log('AddProduct button pressed');
     navigation.navigate('AddProduct');
   };
 

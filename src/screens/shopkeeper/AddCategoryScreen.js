@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { COLORS } from '../../constants';
 
-const AddCategoryScreen = ({ navigate }) => {
+const AddCategoryScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -46,7 +46,7 @@ const AddCategoryScreen = ({ navigate }) => {
     Alert.alert('Success', 'Category saved successfully!', [
       {
         text: 'OK',
-        onPress: () => navigate('ShopkeeperDashboard'),
+        onPress: () => navigation.navigate('ShopkeeperDashboard'),
       },
     ]);
   };
@@ -65,7 +65,7 @@ const AddCategoryScreen = ({ navigate }) => {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigate('ShopkeeperDashboard')}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('ShopkeeperDashboard')}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>📂 Add Category</Text>

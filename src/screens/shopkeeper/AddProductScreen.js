@@ -16,7 +16,7 @@ import { addProduct } from '../../redux/slices/productSlice';
 import Header from '../../components/common/Header';
 import { COLORS } from '../../constants';
 
-const AddProductScreen = ({ navigate, navigation }) => {
+const AddProductScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { isLoading } = useSelector(state => state.products);
   

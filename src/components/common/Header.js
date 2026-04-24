@@ -14,7 +14,9 @@ const Header = ({ title, onBackPress, rightComponent, style }) => {
         <View style={styles.backButtonPlaceholder} />
       )}
       <Text style={styles.title} numberOfLines={1}>{title}</Text>
-      {rightComponent || <View style={styles.backButtonPlaceholder} />}
+      <View style={styles.rightComponentContainer}>
+        {rightComponent || <View style={styles.backButtonPlaceholder} />}
+      </View>
     </View>
   );
 };
@@ -51,6 +53,9 @@ const styles = StyleSheet.create({
     fontSize: SIZES.h2,
     fontWeight: 'bold',
     color: COLORS.white,
+  },
+  rightComponentContainer: {
+    alignItems: 'flex-end',
   },
 });
 
