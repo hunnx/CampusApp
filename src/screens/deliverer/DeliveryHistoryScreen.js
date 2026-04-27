@@ -46,13 +46,23 @@ const DeliveryHistoryScreen = ({ navigation }) => {
   };
 
   const getCompletedOrders = () => {
+    if (!Array.isArray(orders)) {
+      return [];
+    }
     return orders.filter(order => 
       order.delivererId === user?.id && 
       order.status === ORDER_STATUS.COMPLETED
-    ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    ).sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
   };
 
   const getStatusCount = (status) => {
+    if (!Array.isArray(orders)) {
+      return 0;
+    }
     return orders.filter(order => 
       order.delivererId === user?.id && order.status === status
     ).length;
@@ -63,6 +73,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
     const totalEarnings = completedOrders.length * 100; // 100 PKR per delivery
     const todayEarnings = completedOrders
       .filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         const today = new Date();
         return orderDate.toDateString() === today.toDateString();
@@ -88,20 +99,24 @@ const DeliveryHistoryScreen = ({ navigation }) => {
   };
 
   const renderFilterTabs = () => {
+    const completedOrders = getCompletedOrders();
     const filters = [
-      { key: 'All', label: 'All', count: getCompletedOrders().length },
-      { key: 'today', label: 'Today', count: getCompletedOrders().filter(order => {
+      { key: 'All', label: 'All', count: completedOrders.length },
+      { key: 'today', label: 'Today', count: completedOrders.filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         const today = new Date();
         return orderDate.toDateString() === today.toDateString();
       }).length },
-      { key: 'week', label: 'This Week', count: getCompletedOrders().filter(order => {
+      { key: 'week', label: 'This Week', count: completedOrders.filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         return orderDate >= weekAgo;
       }).length },
-      { key: 'month', label: 'This Month', count: getCompletedOrders().filter(order => {
+      { key: 'month', label: 'This Month', count: completedOrders.filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         const monthAgo = new Date();
         monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -156,6 +171,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
     if (selectedFilter === 'today') {
       const today = new Date();
       filtered = filtered.filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         return orderDate.toDateString() === today.toDateString();
       });
@@ -163,6 +179,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       filtered = filtered.filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         return orderDate >= weekAgo;
       });
@@ -170,6 +187,7 @@ const DeliveryHistoryScreen = ({ navigation }) => {
       const monthAgo = new Date();
       monthAgo.setMonth(monthAgo.getMonth() - 1);
       filtered = filtered.filter(order => {
+        if (!order.createdAt) return false;
         const orderDate = new Date(order.createdAt);
         return orderDate >= monthAgo;
       });

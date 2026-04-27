@@ -104,15 +104,23 @@ export const fetchOrders = createAsyncThunk(
 
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
-  async ({ orderId, status }, { rejectWithValue }) => {
+  async ({ orderId, status }, { rejectWithValue, getState }) => {
     try {
       const backendRequest = transformUpdateStatusRequest(status);
       const response = await api.put(`/Orders/${orderId}/status`, backendRequest);
-      const transformedOrder = transformOrder(response);
+
+      // Backend returns true on success, so we need to update the order locally
+      const state = getState();
+      const existingOrder = state.orders.orders.find(o => String(o.id) === String(orderId));
+      
+      if (existingOrder) {
+        const updatedOrder = { ...existingOrder, status };
+        emitIfConnected('orderStatusUpdate', { orderId, status });
+        return updatedOrder;
+      }
 
       emitIfConnected('orderStatusUpdate', { orderId, status });
-
-      return transformedOrder;
+      return { id: orderId, status };
     } catch (error) {
       return rejectWithValue(getOrderErrorMessage(error, 'Failed to update order status'));
     }

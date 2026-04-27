@@ -19,39 +19,44 @@ import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
 const ShopkeeperOrdersScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const { orders, isLoading } = useSelector(state => state.orders);
+  const ordersList = orders || [];
   const { user, token } = useSelector(state => state.auth);
   
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(route?.params?.filter || 'All');
 
   useEffect(() => {
-    loadOrders();
+    if (user?.id) {
+      loadOrders();
+    }
     
     // Listen for new orders (socket is already connected in login)
-    socketService.onNewOrder((orderData) => {
-      if (orderData.shopkeeperId === user.id) {
+    const handleNewOrder = (orderData) => {
+      if (orderData?.shopkeeperId === user?.id) {
         dispatch(addNewOrder(orderData));
         Alert.alert('New Order!', 'A new order has been placed for your shop.');
       }
-    });
+    };
+    
+    socketService.onNewOrder(handleNewOrder);
     
     // Listen for order status updates
-    socketService.onOrderStatusUpdate((updateData) => {
-      // Handle real-time status updates if needed
+    const handleStatusUpdate = (updateData) => {
       console.log('Order status updated:', updateData);
-    });
+    };
+    
+    socketService.onOrderStatusUpdate(handleStatusUpdate);
     
     return () => {
       // Cleanup socket listeners
-      // Note: Don't disconnect socket here as it might be used by other screens
+      socketService.offNewOrder(handleNewOrder);
+      socketService.offOrderStatusUpdate(handleStatusUpdate);
     };
-  }, [user]);
+  }, [user?.id]);
 
   const loadOrders = async () => {
     try {
-      if (user?.id) {
-        await dispatch(fetchShopkeeperOrders(user.id));
-      }
+      await dispatch(fetchShopkeeperOrders());
     } catch (error) {
       console.error('Failed to load orders:', error);
     }
@@ -88,22 +93,37 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
   };
 
   const getFilteredOrders = () => {
-    let filtered = orders;
+    if (!Array.isArray(ordersList)) {
+      return [];
+    }
+
+    let filtered = ordersList;
     
     if (selectedFilter !== 'All') {
       filtered = filtered.filter(order => order.status === selectedFilter);
     }
     
-    return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return filtered.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
   };
 
   const getStatusCount = (status) => {
-    return orders.filter(order => order.status === status).length;
+    if (!Array.isArray(ordersList)) {
+      return 0;
+    }
+    return ordersList.filter(order => order.status === status).length;
   };
 
   const renderFilterTabs = () => {
+    if (!Array.isArray(ordersList)) {
+      return null;
+    }
+
     const filters = [
-      { key: 'All', label: 'All', count: orders.length },
+      { key: 'All', label: 'All', count: ordersList.length },
       { key: ORDER_STATUS.PENDING, label: 'Pending', count: getStatusCount(ORDER_STATUS.PENDING) },
       { key: ORDER_STATUS.PREPARING, label: 'Preparing', count: getStatusCount(ORDER_STATUS.PREPARING) },
       { key: ORDER_STATUS.READY, label: 'Ready', count: getStatusCount(ORDER_STATUS.READY) },
@@ -190,9 +210,15 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="Shop Orders" rightComponent={<Text style={styles.subtitle}>{orders.length} orders</Text>} />
+      <Header title="Shop Orders" rightComponent={<Text style={styles.subtitle}>{ordersList.length} orders</Text>} />
 
-      {renderOrders()}
+      {isLoading && ordersList.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading orders...</Text>
+        </View>
+      ) : (
+        renderOrders()
+      )}
     </View>
   );
 };
@@ -297,6 +323,15 @@ const styles = StyleSheet.create({
     fontSize: SIZES.font,
     color: COLORS.gray,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: SIZES.font,
+    color: COLORS.gray,
   },
 });
 

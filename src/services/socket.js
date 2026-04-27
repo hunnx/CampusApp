@@ -57,6 +57,18 @@ class SocketService {
     }
   }
 
+  offNewOrder(callback) {
+    if (this.socket) {
+      this.socket.off('newOrder', callback);
+    }
+  }
+
+  offOrderStatusUpdate(callback) {
+    if (this.socket) {
+      this.socket.off('orderStatusUpdate', callback);
+    }
+  }
+
   onDeliveryUpdate(callback) {
     if (this.socket) {
       this.socket.on('deliveryUpdate', callback);

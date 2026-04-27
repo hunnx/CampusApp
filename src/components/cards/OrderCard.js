@@ -40,22 +40,22 @@ const OrderCard = ({
   };
 
   const renderOrderItems = () => {
-    if (!order || !order.items) return null;
+    if (!order || !order.items || !Array.isArray(order.items)) return null;
     
     return order.items.map((item, index) => (
       <View key={index} style={styles.itemRow}>
         <Text style={styles.itemName} numberOfLines={1}>
-          {item.name}
+          {item.name || 'Unknown item'}
         </Text>
         <Text style={styles.itemDetails}>
-          {item.quantity}x PKR {item.price}
+          {item.quantity || 0}x PKR {item.price || 0}
         </Text>
       </View>
     ));
   };
 
   const renderActions = () => {
-    if (!showActions || !order) return null;
+    if (!showActions || !order || !order.status) return null;
 
     const actions = [];
 
@@ -102,6 +102,10 @@ const OrderCard = ({
     ) : null;
   };
 
+  if (!order) {
+    return null;
+  }
+
   return (
     <TouchableOpacity
       style={[styles.container, style]}
@@ -110,13 +114,13 @@ const OrderCard = ({
     >
       <View style={styles.header}>
         <View style={styles.orderInfo}>
-          <Text style={styles.orderId}>Order #{order?.id ? String(order.id).slice(-6) : 'N/A'}</Text>
+          <Text style={styles.orderId}>Order #{order.id ? String(order.id).slice(-6) : 'N/A'}</Text>
           <Text style={styles.orderTime}>
-            {order?.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}
+            {order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}
           </Text>
         </View>
-        <View style={[styles.statusContainer, { backgroundColor: getStatusColor(order?.status) }]}>
-          <Text style={styles.statusText}>{getStatusText(order?.status || 'unknown')}</Text>
+        <View style={[styles.statusContainer, { backgroundColor: getStatusColor(order.status) }]}>
+          <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
         </View>
       </View>
 
@@ -128,12 +132,12 @@ const OrderCard = ({
         <View style={styles.footer}>
           <View style={styles.locationInfo}>
             <Text style={styles.locationText} numberOfLines={1}>
-              📍 {order?.pickupLocation || 'N/A'} → {order?.dropLocation || 'N/A'}
+              📍 {order.pickupLocation || 'N/A'} → {order.dropLocation || 'N/A'}
             </Text>
           </View>
           <View style={styles.priceInfo}>
-            <Text style={styles.totalAmount}>PKR {order?.totalAmount || 0}</Text>
-            <Text style={styles.deliveryCharge}>+ PKR {order?.deliveryCharge || 0} delivery</Text>
+            <Text style={styles.totalAmount}>PKR {order.totalAmount || 0}</Text>
+            <Text style={styles.deliveryCharge}>+ PKR {order.deliveryCharge || 0} delivery</Text>
           </View>
         </View>
       </View>

@@ -27,6 +27,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { orders } = useSelector(state => state.orders);
+  const ordersList = orders || [];
   
   const [refreshing, setRefreshing] = useState(false);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -39,42 +40,52 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
 
   useEffect(() => {
     // Load initial data
-    loadDashboardData();
-    
-    // Join shopkeeper room for real-time updates
     if (user?.id) {
+      loadDashboardData();
+      
+      // Join shopkeeper room for real-time updates
       console.log('Dashboard joining shopkeeper room:', user.id);
       socketService.joinShopkeeperRoom(user.id);
     }
     
     // Listen for new orders
-    socketService.onNewOrder((orderData) => {
+    const handleNewOrder = (orderData) => {
       console.log('Dashboard received new order:', orderData);
-      if (orderData.shopkeeperId === user?.id) {
+      if (orderData?.shopkeeperId === user?.id) {
         console.log('Order is for this shopkeeper, refreshing data');
         // Refresh dashboard data when new order arrives
         loadDashboardData();
         Alert.alert('New Order!', 'A new order has been placed for your shop.');
       } else {
-        console.log('Order is for different shopkeeper:', orderData.shopkeeperId, 'vs', user?.id);
+        console.log('Order is for different shopkeeper:', orderData?.shopkeeperId, 'vs', user?.id);
       }
-    });
+    };
+    
+    socketService.onNewOrder(handleNewOrder);
     
     // Listen for order status updates
-    socketService.onOrderStatusUpdate((updateData) => {
+    const handleStatusUpdate = (updateData) => {
       console.log('Dashboard received order status update:', updateData);
       // Refresh dashboard data when order status changes
       loadDashboardData();
-    });
-  }, [user]);
+    };
+    
+    socketService.onOrderStatusUpdate(handleStatusUpdate);
+    
+    return () => {
+      socketService.offNewOrder(handleNewOrder);
+      socketService.offOrderStatusUpdate(handleStatusUpdate);
+    };
+  }, [user?.id]);
 
   const loadDashboardData = async () => {
     try {
       if (user?.id) {
         console.log('Loading dashboard data for shopkeeper:', user.id);
+        setLoadingStats(true);
 
         // Fetch orders
-        const ordersResult = await dispatch(fetchShopkeeperOrders(user.id));
+        const ordersResult = await dispatch(fetchShopkeeperOrders());
         console.log('Dashboard - Orders fetched:', ordersResult);
 
         // Fetch dashboard stats from backend
@@ -82,6 +93,8 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -101,8 +114,8 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   };
 
   const updateDashboardStats = () => {
-    const totalOrders = orders.length;
-    const completedOrders = orders.filter(order => order.status === ORDER_STATUS.COMPLETED).length;
+    const totalOrders = ordersList.length;
+    const completedOrders = ordersList.filter(order => order.status === ORDER_STATUS.COMPLETED).length;
     
     setDashboardStats(prev => ({
       ...prev,
@@ -122,11 +135,11 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   }, [user]);
 
   useEffect(() => {
-    if (Array.isArray(orders)) {
-      console.log('Shopkeeper dashboard orders updated:', orders);
+    if (Array.isArray(ordersList)) {
+      console.log('Shopkeeper dashboard orders updated:', ordersList);
       updateDashboardStats();
     }
-  }, [orders]);
+  }, [ordersList]);
 
   const handleCardPress = (cardType) => {
     switch (cardType) {
@@ -136,7 +149,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         break;
       case 'orders':
         // Navigate to Orders Screen
-        navigation.navigate('Orders', { screen: 'ShopkeeperOrders' });
+        navigation.navigate('Orders');
         break;
       case 'categories':
         // Navigate to Categories Screen (if exists)
@@ -144,7 +157,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         break;
       case 'completed':
         // Navigate to Orders Screen with completed filter
-        navigation.navigate('Orders', { screen: 'ShopkeeperOrders', params: { filter: ORDER_STATUS.COMPLETED } });
+        navigation.navigate('Orders');
         break;
       default:
         Alert.alert('Card Pressed', `You pressed ${cardType}`);
@@ -223,7 +236,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
             <Text style={styles.actionText}>Add New Product</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Orders', { screen: 'ShopkeeperOrders' })}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Orders')}>
             <Text style={styles.actionIcon}>📋</Text>
             <Text style={styles.actionText}>View Orders</Text>
           </TouchableOpacity>
@@ -238,16 +251,16 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
         <View style={styles.recentOrders}>
           <View style={styles.recentOrdersHeader}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Orders', { screen: 'ShopkeeperOrders' })}>
+            <TouchableOpacity onPress={() => navigation.navigate('Orders')}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
           
-          {orders.slice(0, 3).map((order) => (
+          {ordersList.slice(0, 3).map((order) => (
             <TouchableOpacity 
               key={order.id} 
               style={styles.orderItem}
-              onPress={() => navigation.navigate('Orders', { screen: 'ShopkeeperOrders' })}
+              onPress={() => navigation.navigate('Orders')}
             >
               <View style={styles.orderInfo}>
                 <Text style={styles.orderId}>Order #{String(order.id).slice(-6)}</Text>
@@ -257,7 +270,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
           
-          {orders.length === 0 && (
+          {ordersList.length === 0 && (
             <View style={styles.noOrdersContainer}>
               <Text style={styles.noOrdersText}>No orders yet</Text>
               <Text style={styles.noOrdersSubtext}>Orders will appear here when placed</Text>
