@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,63 +7,42 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { fetchOrders } from '../../redux/slices/orderSlice';
-import Header from '../../components/common/Header';
-import OrderCard from '../../components/cards/OrderCard';
-import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
+import { useTheme } from '../../theme/ThemeContext';
+import { BORDER_RADIUS, FONTS, ORDER_STATUS } from '../../constants';
+import ModernCard from '../../components/common/ModernCard';
+import Badge from '../../components/common/Badge';
+import EmptyState from '../../components/common/EmptyState';
+import SkeletonLoader from '../../components/common/SkeletonLoader';
 
 const OrdersScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { orders, isLoading } = useSelector(state => state.orders);
   const { user } = useSelector(state => state.auth);
-  
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('All');
 
-  // Load orders when screen comes into focus
   useFocusEffect(
-    React.useCallback(() => {
-      loadOrders();
-    }, [user?.id])
+    useCallback(() => { loadOrders(); }, [user?.id])
   );
 
   const loadOrders = async () => {
-    try {
-      await dispatch(fetchOrders({ 
-        userId: user?.id, 
-        userRole: user?.role 
-      }));
-    } catch (error) {
-      console.error('Failed to load orders:', error);
-    }
+    try { await dispatch(fetchOrders({ userId: user?.id, userRole: user?.role })); }
+    catch (error) { console.error('Failed to load orders:', error); }
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadOrders();
-    setRefreshing(false);
-  };
+  const onRefresh = async () => { setRefreshing(true); await loadOrders(); setRefreshing(false); };
 
-  const handleOrderPress = (order) => {
-    console.log('OrdersScreen - Order pressed:', order.id, order);
-    navigation.navigate('OrderTracking', { orderId: order.id });
-  };
+  const handleOrderPress = (order) => navigation.navigate('OrderTracking', { orderId: order.id });
 
   const getFilteredOrders = () => {
     const list = Array.isArray(orders) ? orders : [];
-
-    const filtered = selectedFilter === 'All'
-      ? list
-      : list.filter((order) => {
-          const orderStatus = (order?.status || '').toString().toLowerCase();
-          const filterKey = String(selectedFilter || '').toLowerCase();
-          return orderStatus === filterKey;
-        });
-
+    const filtered = selectedFilter === 'All' ? list : list.filter(o => String(o?.status || '').toLowerCase() === String(selectedFilter || '').toLowerCase());
     return filtered.slice().sort((a, b) => {
       const dateA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -72,252 +51,131 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   const getStatusCount = (status) => {
-    const ordersArray = Array.isArray(orders) ? orders : [];
+    const list = Array.isArray(orders) ? orders : [];
+    return list.filter(o => String(o?.status || '').toLowerCase() === String(status || '').toLowerCase()).length;
+  };
+
+  const statusVariant = (status) => {
     const s = String(status || '').toLowerCase();
-    return ordersArray.filter(order => String(order?.status || '').toLowerCase() === s).length;
+    if (s === 'completed' || s === 'delivered') return 'success';
+    if (s === 'pending') return 'warning';
+    if (s === 'preparing' || s === 'ready') return 'info';
+    return 'neutral';
   };
 
-  const renderFilterTabs = () => {
-    const ordersArray = Array.isArray(orders) ? orders : [];
-    const filters = [
-      { key: 'All', label: 'All', count: ordersArray.length },
-      { key: ORDER_STATUS.PENDING, label: 'Pending', count: getStatusCount(ORDER_STATUS.PENDING) },
-      { key: ORDER_STATUS.PREPARING, label: 'Preparing', count: getStatusCount(ORDER_STATUS.PREPARING) },
-      { key: ORDER_STATUS.READY, label: 'Ready', count: getStatusCount(ORDER_STATUS.READY) },
-      { key: ORDER_STATUS.DELIVERED, label: 'Delivered', count: getStatusCount(ORDER_STATUS.DELIVERED) },
-      { key: ORDER_STATUS.COMPLETED, label: 'Completed', count: getStatusCount(ORDER_STATUS.COMPLETED) },
-    ];
+  const filters = [
+    { key: 'All', label: 'All' },
+    { key: ORDER_STATUS.PENDING, label: 'Pending' },
+    { key: ORDER_STATUS.PREPARING, label: 'Preparing' },
+    { key: ORDER_STATUS.READY, label: 'Ready' },
+    { key: ORDER_STATUS.DELIVERED, label: 'Delivered' },
+    { key: ORDER_STATUS.COMPLETED, label: 'Completed' },
+  ];
 
-    return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterTabs}
-        contentContainerStyle={styles.filterTabsContent}
-      >
-        {filters.map(filter => (
-          <TouchableOpacity
-            key={filter.key}
-            style={[
-              styles.filterTab,
-              selectedFilter === filter.key && styles.filterTabActive,
-            ]}
-            onPress={() => setSelectedFilter(filter.key)}
-          >
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedFilter === filter.key && styles.filterTabTextActive,
-              ]}
-            >
-              {filter.label}
-            </Text>
-            <View style={[
-              styles.filterBadge,
-              selectedFilter === filter.key && styles.filterBadgeActive,
-            ]}>
-              <Text style={[
-                styles.filterBadgeText,
-                selectedFilter === filter.key && styles.filterBadgeTextActive,
-              ]}>
-                {filter.count}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+  const filtered = getFilteredOrders();
+
+  if (isLoading && !refreshing) {
+    return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
+      React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
+        React.createElement(Text, { style: styles.headerTitle }, 'My Orders'),
+      ),
+      React.createElement(View, { style: { padding: 20 } },
+        React.createElement(SkeletonLoader, { variant: 'list', count: 3 })
+      )
     );
-  };
+  }
 
-  // Note: main FlatList is rendered below; helper removed to avoid duplicate lists
+  return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
+    React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
+      React.createElement(View, { style: styles.headerTop },
+        React.createElement(Text, { style: styles.headerTitle }, 'My Orders'),
+        React.createElement(View, { style: [styles.countBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }] },
+          React.createElement(Text, { style: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 } }, String(Array.isArray(orders) ? orders.length : 0))
+        )
+      )
+    ),
 
-  const renderEmptyState = () => {
-    return (
-      <View style={styles.emptyStateContainer}>
-        <Text style={styles.emptyIcon}>📦</Text>
-        <Text style={styles.emptyTitle}>No Orders Yet</Text>
-        <Text style={styles.emptySubtitle}>
-          You haven't placed any orders yet. Start shopping to see your orders here!
-        </Text>
-        <TouchableOpacity
-          style={styles.shopButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.shopButtonText}>Start Shopping</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+    React.createElement(ScrollView, {
+      horizontal: true,
+      showsHorizontalScrollIndicator: false,
+      contentContainerStyle: { paddingHorizontal: 16, paddingVertical: 14, gap: 8 },
+    },
+      filters.map(f => {
+        const isActive = selectedFilter === f.key;
+        const count = f.key === 'All' ? (Array.isArray(orders) ? orders.length : 0) : getStatusCount(f.key);
+        return React.createElement(TouchableOpacity, {
+          key: f.key,
+          onPress: () => setSelectedFilter(f.key),
+          style: [styles.filterChip, {
+            backgroundColor: isActive ? colors.primary : colors.light,
+          }],
+        },
+          React.createElement(Text, { style: [styles.filterText, { color: isActive ? '#FFFFFF' : colors.gray }] }, f.label),
+          React.createElement(View, { style: [styles.filterCount, { backgroundColor: isActive ? 'rgba(255,255,255,0.3)' : colors.border }] },
+            React.createElement(Text, { style: { fontSize: 11, fontWeight: '700', color: isActive ? '#FFFFFF' : colors.gray } }, String(count))
+          )
+        );
+      })
+    ),
 
-  return (
-    <View style={styles.container}>
-      <Header title="My Orders" onBackPress={() => navigation.goBack()} rightComponent={<Text style={styles.subtitle}>{Array.isArray(orders) ? orders.length : 0} total orders</Text>} />
-
-      <FlatList
-        data={getFilteredOrders()}
-        keyExtractor={(item, index) => String(item?.id || index)}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => {
-          if (!item) return null;
-          return (
-            <OrderCard
-              order={item}
-              onPress={handleOrderPress}
-              showActions={false}
-              style={styles.orderCard}
-            />
-          );
-        }}
-        contentContainerStyle={[
-          styles.ordersContent,
-          // Center empty state when no orders
-          Array.isArray(orders) && orders.length === 0 && { flex: 1 },
-        ]}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        ListHeaderComponent={renderFilterTabs}
-        ListEmptyComponent={renderEmptyState}
-      />
-    </View>
+    React.createElement(FlatList, {
+      data: filtered,
+      keyExtractor: (item, index) => String(item?.id || index),
+      contentContainerStyle: { paddingHorizontal: 16, paddingBottom: 100 },
+      showsVerticalScrollIndicator: false,
+      refreshControl: React.createElement(RefreshControl, { refreshing, onRefresh, colors: [colors.primary] }),
+      ListEmptyComponent: !isLoading ? React.createElement(EmptyState, {
+        icon: 'receipt-outline',
+        title: 'No Orders Yet',
+        subtitle: 'You have not placed any orders yet. Start shopping!',
+        actionTitle: 'Start Shopping',
+        onAction: () => navigation.navigate('Home'),
+      }) : null,
+      renderItem: ({ item }) => {
+        if (!item) return null;
+        const total = (item.totalAmount || 0) + (item.deliveryCharge || 0);
+        return React.createElement(ModernCard, {
+          onPress: () => handleOrderPress(item),
+          variant: 'elevated',
+          borderRadius: BORDER_RADIUS['2xl'],
+          padding: 20,
+          style: { marginBottom: 14 },
+        },
+          React.createElement(View, { style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 } },
+            React.createElement(View, null,
+              React.createElement(Text, { style: [styles.orderId, { color: colors.dark }] }, 'Order #' + String(item.id).slice(-6)),
+              React.createElement(Text, { style: [styles.orderDate, { color: colors.grayLight }] }, item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '')
+            ),
+            React.createElement(Badge, { text: item.status, variant: statusVariant(item.status) })
+          ),
+          React.createElement(View, { style: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 } },
+            React.createElement(Icon, { name: 'cube-outline', size: 16, color: colors.gray }),
+            React.createElement(Text, { style: [styles.orderMeta, { color: colors.grayLight }] }, (item.items?.length || 0) + ' items')
+          ),
+          React.createElement(View, { style: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.light, paddingTop: 12 } },
+            React.createElement(Text, { style: [styles.orderLabel, { color: colors.gray }] }, 'Total'),
+            React.createElement(Text, { style: [styles.orderTotal, { color: colors.primary }] }, 'PKR ' + total)
+          )
+        );
+      },
+    })
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.light,
-  },
-  header: {
-    padding: SIZES.padding,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-  },
-  title: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-  },
-  subtitle: {
-    fontSize: SIZES.font - 1,
-    color: COLORS.white,
-    marginTop: SIZES.base / 2,
-  },
-  filterTabs: {
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-    maxHeight: 150,
-    height: 80,
-    paddingVertical: SIZES.base / 2,
-  },
-  filterTabsContent: {
-    paddingHorizontal: SIZES.padding,
-    paddingVertical: SIZES.base / 2,
-  },
-  filterTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SIZES.padding,
-    paddingVertical: SIZES.base / 3,
-    borderRadius: SIZES.radius,
-    backgroundColor: COLORS.light,
-    marginRight: SIZES.base,
-  },
-  filterTabActive: {
-    backgroundColor: COLORS.primary,
-  },
-  filterTabText: {
-    fontSize: SIZES.font - 1,
-    color: COLORS.gray,
-    fontWeight: '500',
-    marginRight: SIZES.base / 2,
-  },
-  filterTabTextActive: {
-    color: COLORS.white,
-  },
-  filterBadge: {
-    backgroundColor: COLORS.white,
-    paddingHorizontal: SIZES.base / 2,
-    paddingVertical: 2,
-    borderRadius: SIZES.radius / 2,
-    minWidth: 20,
-    alignItems: 'center',
-  },
-  filterBadgeActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  filterBadgeText: {
-    fontSize: SIZES.font - 3,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  filterBadgeTextActive: {
-    color: COLORS.white,
-  },
-  ordersContainer: {
-    flex: 1,
-  },
-  ordersContent: {
-    padding: SIZES.base,
-    paddingBottom: SIZES.padding * 4,
-  },
-  columnWrapper: {
-    justifyContent: 'space-between',
-    marginBottom: SIZES.base,
-  },
-  orderCard: {
-    flex: 1,
-    marginHorizontal: SIZES.base / 2,
-    marginBottom: SIZES.base,
-    minWidth: 0,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: SIZES.padding * 4,
-  },
-  emptyText: {
-    fontSize: SIZES.font,
-    color: COLORS.gray,
-    textAlign: 'center',
-  },
-  emptyStateContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: SIZES.padding * 4,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: SIZES.padding,
-  },
-  emptyTitle: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: SIZES.base,
-  },
-  emptySubtitle: {
-    fontSize: SIZES.font,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginBottom: SIZES.padding * 2,
-    paddingHorizontal: SIZES.padding * 2,
-  },
-  shopButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SIZES.padding * 2,
-    paddingVertical: SIZES.base,
-    borderRadius: SIZES.radius,
-  },
-  shopButtonText: {
-    color: COLORS.white,
-    fontSize: SIZES.font,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitle: { fontSize: FONTS.h1.size, fontWeight: '800', color: '#FFFFFF' },
+  countBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
+  filterText: { fontSize: 13, fontWeight: '600', marginRight: 6 },
+  filterCount: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, minWidth: 20, alignItems: 'center' },
+  orderId: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
+  orderDate: { fontSize: 12 },
+  orderMeta: { fontSize: 13, marginLeft: 6 },
+  orderLabel: { fontSize: 13, fontWeight: '500' },
+  orderTotal: { fontSize: 16, fontWeight: '700' },
 });
 
 export default OrdersScreen;

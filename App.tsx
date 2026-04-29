@@ -1,22 +1,17 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
-import AppNavigator from './src/navigation/AppNavigator';
+import { ThemeProvider } from './src/theme/ThemeContext';
 import { store } from './src/redux/store';
+import AppNavigator from './src/navigation/AppNavigator';
 
 const App = () => {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
+      <ThemeProvider>
+        <StatusBar barStyle="dark-content" />
         <AppNavigator />
-      </SafeAreaProvider>
+      </ThemeProvider>
     </Provider>
   );
 };

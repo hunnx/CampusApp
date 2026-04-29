@@ -9,494 +9,265 @@ import {
   Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, clearError } from '../../redux/slices/authSlice';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { logout } from '../../redux/slices/authSlice';
 import { fetchUserProfile, updateProfile } from '../../redux/slices/userSlice';
-import Header from '../../components/common/Header';
-import Input from '../../components/common/Input';
-import Button from '../../components/buttons/Button';
-import { COLORS, SIZES } from '../../constants';
+import { useTheme } from '../../theme/ThemeContext';
+import { BORDER_RADIUS, FONTS, SHADOWS } from '../../constants';
+import ModernCard from '../../components/common/ModernCard';
+import ModernInput from '../../components/common/ModernInput';
+import ModernButton from '../../components/common/ModernButton';
+import Badge from '../../components/common/Badge';
 
 const StudentProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { user } = useSelector(state => state.auth);
   const { profile, isLoading } = useSelector(state => state.user);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    hostel: '',
-    roomNumber: '',
+    name: '', email: '', phone: '', address: '', hostel: '', roomNumber: '',
   });
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
+  useEffect(() => { loadProfile(); }, []);
 
   const loadProfile = async () => {
-    try {
-      await dispatch(fetchUserProfile(user?.id)).unwrap();
-    } catch (error) {
-      console.error('Failed to load profile:', error);
-    }
+    try { await dispatch(fetchUserProfile(user?.id)).unwrap(); }
+    catch (error) { console.error('Failed to load profile:', error); }
   };
 
   useEffect(() => {
     if (profile) {
       setFormData({
-        name: profile.name || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
-        address: profile.address || '',
-        hostel: profile.hostel || '',
-        roomNumber: profile.roomNumber || '',
+        name: profile.name || '', email: profile.email || '',
+        phone: profile.phone || '', address: profile.address || '',
+        hostel: profile.hostel || '', roomNumber: profile.roomNumber || '',
       });
     }
   }, [profile]);
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.name) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.phone) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10,15}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Phone number is invalid';
-    }
-
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.phone) newErrors.phone = 'Phone number is required';
+    else if (!/^\d{10,15}$/.test(formData.phone.replace(/\s/g, ''))) newErrors.phone = 'Phone number is invalid';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleUpdateProfile = async () => {
     if (!validateForm()) return;
-
     try {
       await dispatch(updateProfile(formData)).unwrap();
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-    }
+    } catch (error) { Alert.alert('Error', 'Failed to update profile'); }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          onPress: () => {
-            dispatch(logout());
-          },
-        },
-      ]
-    );
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', onPress: () => dispatch(logout()) },
+    ]);
   };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
   };
 
-  const renderProfileHeader = () => {
-    return (
-      <View style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <Image
-            source={{ uri: profile?.avatar || 'https://via.placeholder.com/100x100/004E89/FFFFFF?text=ST' }}
-            style={styles.avatar}
-          />
-          <TouchableOpacity style={styles.editAvatarButton}>
-            <Text style={styles.editAvatarText}>📷</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.profileInfo}>
-          <Text style={styles.userName}>{profile?.name || 'Student'}</Text>
-          <Text style={styles.userEmail}>{profile?.email}</Text>
-          <Text style={styles.userType}>Student Account</Text>
-        </View>
-      </View>
-    );
-  };
+  const menuItems = [
+    { icon: 'receipt-outline', title: 'Order History', subtitle: 'View all your past orders', screen: 'Orders' },
+    { icon: 'card-outline', title: 'Payment Methods', subtitle: 'Manage payment options', action: () => Alert.alert('Coming Soon', 'Payment methods feature coming soon!') },
+    { icon: 'location-outline', title: 'Delivery Addresses', subtitle: 'Manage delivery locations', action: () => Alert.alert('Coming Soon', 'Delivery addresses feature coming soon!') },
+    { icon: 'notifications-outline', title: 'Notifications', subtitle: 'Manage notification settings', action: () => Alert.alert('Coming Soon', 'Notifications settings feature coming soon!') },
+    { icon: 'help-circle-outline', title: 'Help & Support', subtitle: 'Get help with your orders', action: () => Alert.alert('Help & Support', 'For support, please contact: support@campusapp.com') },
+  ];
 
-  const renderStatsSection = () => {
-    return (
-      <View style={styles.statsSection}>
-        <Text style={styles.sectionTitle}>Order Statistics</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Total Orders</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Completed</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>PKR 0</Text>
-            <Text style={styles.statLabel}>Total Spent</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
+  return React.createElement(ScrollView, {
+    style: [styles.container, { backgroundColor: colors.background }],
+    showsVerticalScrollIndicator: false,
+  },
+    // Header with avatar
+    React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
+      React.createElement(View, { style: styles.avatarContainer },
+        React.createElement(View, { style: [styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)' }] },
+          React.createElement(Icon, { name: 'person', size: 48, color: '#FFFFFF' })
+        ),
+        React.createElement(View, { style: [styles.editAvatarBtn, { backgroundColor: colors.accent }] },
+          React.createElement(Icon, { name: 'camera', size: 14, color: '#FFFFFF' })
+        )
+      ),
+      React.createElement(Text, { style: styles.userName }, profile?.name || 'Student'),
+      React.createElement(Text, { style: styles.userEmail }, profile?.email),
+      React.createElement(Badge, {
+        text: 'Student Account',
+        variant: 'primary',
+        style: { marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)' },
+        textStyle: { color: '#FFFFFF' },
+      })
+    ),
 
-  const renderEditForm = () => {
-    return (
-      <View style={styles.editForm}>
-        <Text style={styles.sectionTitle}>Edit Profile</Text>
-        
-        <Input
-          label="Full Name"
-          value={formData.name}
-          onChangeText={(value) => handleInputChange('name', value)}
-          placeholder="Enter your full name"
-          error={errors.name}
-          editable={isEditing}
-        />
+    // Stats
+    React.createElement(View, { style: styles.statsRow },
+      React.createElement(ModernCard, {
+        variant: 'elevated',
+        borderRadius: BORDER_RADIUS.xl,
+        padding: 16,
+        style: { flex: 1, marginRight: 8, alignItems: 'center' },
+      },
+        React.createElement(Text, { style: [styles.statValue, { color: colors.primary }] }, '0'),
+        React.createElement(Text, { style: [styles.statLabel, { color: colors.gray }] }, 'Orders')
+      ),
+      React.createElement(ModernCard, {
+        variant: 'elevated',
+        borderRadius: BORDER_RADIUS.xl,
+        padding: 16,
+        style: { flex: 1, marginHorizontal: 4, alignItems: 'center' },
+      },
+        React.createElement(Text, { style: [styles.statValue, { color: colors.accent }] }, '0'),
+        React.createElement(Text, { style: [styles.statLabel, { color: colors.gray }] }, 'Completed')
+      ),
+      React.createElement(ModernCard, {
+        variant: 'elevated',
+        borderRadius: BORDER_RADIUS.xl,
+        padding: 16,
+        style: { flex: 1, marginLeft: 8, alignItems: 'center' },
+      },
+        React.createElement(Text, { style: [styles.statValue, { color: colors.warning }] }, 'PKR 0'),
+        React.createElement(Text, { style: [styles.statLabel, { color: colors.gray }] }, 'Spent')
+      )
+    ),
 
-        <Input
-          label="Email"
-          value={formData.email}
-          onChangeText={(value) => handleInputChange('email', value)}
-          placeholder="Enter your email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={false} // Email should not be editable
-        />
+    // Edit Form or Menu
+    isEditing ? React.createElement(ModernCard, {
+      variant: 'elevated',
+      borderRadius: BORDER_RADIUS['2xl'],
+      padding: 20,
+      style: { marginHorizontal: 16, marginBottom: 16 },
+    },
+      React.createElement(Text, { style: [styles.sectionTitle, { color: colors.dark }] }, 'Edit Profile'),
+      React.createElement(ModernInput, {
+        label: 'Full Name',
+        value: formData.name,
+        onChangeText: (v) => handleInputChange('name', v),
+        error: errors.name,
+        leftIcon: 'person-outline',
+      }),
+      React.createElement(ModernInput, {
+        label: 'Email',
+        value: formData.email,
+        editable: false,
+        leftIcon: 'mail-outline',
+      }),
+      React.createElement(ModernInput, {
+        label: 'Phone',
+        value: formData.phone,
+        onChangeText: (v) => handleInputChange('phone', v),
+        keyboardType: 'phone-pad',
+        error: errors.phone,
+        leftIcon: 'call-outline',
+      }),
+      React.createElement(ModernInput, {
+        label: 'Address',
+        value: formData.address,
+        onChangeText: (v) => handleInputChange('address', v),
+        multiline: true,
+        numberOfLines: 2,
+        leftIcon: 'location-outline',
+      }),
+      React.createElement(ModernInput, {
+        label: 'Hostel',
+        value: formData.hostel,
+        onChangeText: (v) => handleInputChange('hostel', v),
+        leftIcon: 'home-outline',
+      }),
+      React.createElement(ModernInput, {
+        label: 'Room Number',
+        value: formData.roomNumber,
+        onChangeText: (v) => handleInputChange('roomNumber', v),
+        leftIcon: 'bed-outline',
+      }),
+      React.createElement(ModernButton, {
+        title: 'Save Changes',
+        onPress: handleUpdateProfile,
+        loading: isLoading,
+        fullWidth: true,
+        style: { marginTop: 8 },
+      }),
+      React.createElement(ModernButton, {
+        title: 'Cancel',
+        onPress: () => setIsEditing(false),
+        variant: 'outline',
+        fullWidth: true,
+        style: { marginTop: 8 },
+      })
+    ) : React.createElement(ModernCard, {
+      variant: 'elevated',
+      borderRadius: BORDER_RADIUS['2xl'],
+      padding: 8,
+      style: { marginHorizontal: 16, marginBottom: 16 },
+    },
+      menuItems.map((item, index) => React.createElement(TouchableOpacity, {
+        key: index,
+        onPress: item.screen ? () => navigation.navigate(item.screen) : item.action,
+        style: [styles.menuItem, index < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.light }],
+      },
+        React.createElement(View, { style: [styles.menuIcon, { backgroundColor: colors.primaryMuted }] },
+          React.createElement(Icon, { name: item.icon, size: 20, color: colors.primary })
+        ),
+        React.createElement(View, { style: styles.menuContent },
+          React.createElement(Text, { style: [styles.menuTitle, { color: colors.dark }] }, item.title),
+          React.createElement(Text, { style: [styles.menuSubtitle, { color: colors.gray }] }, item.subtitle)
+        ),
+        React.createElement(Icon, { name: 'chevron-forward', size: 18, color: colors.grayLight })
+      ))
+    ),
 
-        <Input
-          label="Phone Number"
-          value={formData.phone}
-          onChangeText={(value) => handleInputChange('phone', value)}
-          placeholder="Enter your phone number"
-          keyboardType="phone-pad"
-          error={errors.phone}
-          editable={isEditing}
-        />
-
-        <Input
-          label="Address"
-          value={formData.address}
-          onChangeText={(value) => handleInputChange('address', value)}
-          placeholder="Enter your address"
-          multiline
-          numberOfLines={3}
-          editable={isEditing}
-        />
-
-        <Input
-          label="Hostel"
-          value={formData.hostel}
-          onChangeText={(value) => handleInputChange('hostel', value)}
-          placeholder="Enter your hostel name"
-          editable={isEditing}
-        />
-
-        <Input
-          label="Room Number"
-          value={formData.roomNumber}
-          onChangeText={(value) => handleInputChange('roomNumber', value)}
-          placeholder="Enter your room number"
-          editable={isEditing}
-        />
-
-        {isEditing && (
-          <View style={styles.editActions}>
-            <Button
-              title="Save Changes"
-              onPress={handleUpdateProfile}
-              loading={isLoading}
-              style={styles.saveButton}
-            />
-            <Button
-              title="Cancel"
-              onPress={() => setIsEditing(false)}
-              type="outline"
-              style={styles.cancelButton}
-            />
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderQuickActions = () => {
-    return (
-      <View style={styles.quickActions}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        
-        <TouchableOpacity 
-          style={styles.actionItem}
-          onPress={() => navigation.navigate('Orders')}
-        >
-          <View style={styles.actionIcon}>
-            <Text style={styles.actionIconText}>📋</Text>
-          </View>
-          <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Order History</Text>
-            <Text style={styles.actionSubtitle}>View all your past orders</Text>
-          </View>
-          <Text style={styles.actionArrow}>{'>'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionItem}
-          onPress={() => Alert.alert('Payment Methods', 'Payment methods feature coming soon!')}
-        >
-          <View style={styles.actionIcon}>
-            <Text style={styles.actionIconText}>💳</Text>
-          </View>
-          <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Payment Methods</Text>
-            <Text style={styles.actionSubtitle}>Manage payment options</Text>
-          </View>
-          <Text style={styles.actionArrow}>{'>'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionItem}
-          onPress={() => Alert.alert('Delivery Addresses', 'Delivery addresses feature coming soon!')}
-        >
-          <View style={styles.actionIcon}>
-            <Text style={styles.actionIconText}>📍</Text>
-          </View>
-          <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Delivery Addresses</Text>
-            <Text style={styles.actionSubtitle}>Manage delivery locations</Text>
-          </View>
-          <Text style={styles.actionArrow}>{'>'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionItem}
-          onPress={() => Alert.alert('Notifications', 'Notifications settings feature coming soon!')}
-        >
-          <View style={styles.actionIcon}>
-            <Text style={styles.actionIconText}>🔔</Text>
-          </View>
-          <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Notifications</Text>
-            <Text style={styles.actionSubtitle}>Manage notification settings</Text>
-          </View>
-          <Text style={styles.actionArrow}>{'>'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionItem}
-          onPress={() => Alert.alert('Help & Support', 'For support, please contact: support@campusapp.com')}
-        >
-          <View style={styles.actionIcon}>
-            <Text style={styles.actionIconText}>❓</Text>
-          </View>
-          <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>Help & Support</Text>
-            <Text style={styles.actionSubtitle}>Get help with your orders</Text>
-          </View>
-          <Text style={styles.actionArrow}>{'>'}</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const renderActions = () => {
-    return (
-      <View style={styles.actionsSection}>
-        {!isEditing && (
-          <Button
-            title="Edit Profile"
-            onPress={() => setIsEditing(true)}
-            style={styles.editButton}
-          />
-        )}
-        
-        <Button
-          title="Logout"
-          onPress={handleLogout}
-          type="secondary"
-          style={styles.logoutButton}
-        />
-      </View>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      <Header title="My Profile" />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-      {renderProfileHeader()}
-      {renderStatsSection()}
-      {renderEditForm()}
-      {renderQuickActions()}
-      {renderActions()}
-    </ScrollView>
-    </View>
+    // Actions
+    React.createElement(View, { style: { paddingHorizontal: 16, paddingBottom: 32 } },
+      !isEditing && React.createElement(ModernButton, {
+        title: 'Edit Profile',
+        onPress: () => setIsEditing(true),
+        variant: 'outline',
+        fullWidth: true,
+        style: { marginBottom: 12 },
+      }),
+      React.createElement(ModernButton, {
+        title: 'Logout',
+        onPress: handleLogout,
+        variant: 'danger',
+        fullWidth: true,
+      })
+    )
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.light,
-  },
-  contentContainer: {
-    paddingBottom: SIZES.padding * 2,
-  },
-  profileHeader: {
-    backgroundColor: COLORS.white,
-    padding: SIZES.padding,
+  container: { flex: 1 },
+  header: {
     alignItems: 'center',
-    marginBottom: SIZES.base,
+    paddingTop: 24,
+    paddingBottom: 32,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: SIZES.padding,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  editAvatarButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  editAvatarText: {
-    fontSize: SIZES.font,
-  },
-  profileInfo: {
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: SIZES.base / 2,
-  },
-  userEmail: {
-    fontSize: SIZES.font,
-    color: COLORS.gray,
-    marginBottom: SIZES.base / 2,
-  },
-  userType: {
-    fontSize: SIZES.font - 1,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  statsSection: {
-    backgroundColor: COLORS.white,
-    padding: SIZES.padding,
-    marginBottom: SIZES.base,
-  },
-  sectionTitle: {
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: SIZES.padding,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: SIZES.base / 2,
-  },
-  statLabel: {
-    fontSize: SIZES.font - 1,
-    color: COLORS.gray,
-  },
-  editForm: {
-    backgroundColor: COLORS.white,
-    padding: SIZES.padding,
-    marginBottom: SIZES.base,
-  },
-  editActions: {
-    marginTop: SIZES.padding,
-  },
-  saveButton: {
-    marginBottom: SIZES.base,
-  },
-  cancelButton: {
-    marginTop: SIZES.base,
-  },
-  quickActions: {
-    backgroundColor: COLORS.white,
-    padding: SIZES.padding,
-    marginBottom: SIZES.base,
-  },
-  actionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: SIZES.padding,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-  },
-  actionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SIZES.padding,
-  },
-  actionIconText: {
-    fontSize: SIZES.font + 4,
-  },
-  actionContent: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: SIZES.font,
-    fontWeight: '600',
-    color: COLORS.dark,
-    marginBottom: SIZES.base / 4,
-  },
-  actionSubtitle: {
-    fontSize: SIZES.font - 1,
-    color: COLORS.gray,
-  },
-  actionArrow: {
-    fontSize: SIZES.h3,
-    color: COLORS.gray,
-  },
-  actionsSection: {
-    padding: SIZES.padding,
-  },
-  editButton: {
-    marginBottom: SIZES.base,
-  },
-  logoutButton: {
-    marginTop: SIZES.base,
-  },
+  avatarContainer: { position: 'relative', marginBottom: 16 },
+  avatar: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center' },
+  editAvatarBtn: { position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  userName: { fontSize: FONTS.h2.size, fontWeight: '700', color: '#FFFFFF', marginBottom: 4 },
+  userEmail: { fontSize: FONTS.bodySmall.size, color: 'rgba(255,255,255,0.8)' },
+  statsRow: { flexDirection: 'row', paddingHorizontal: 16, marginTop: -20, marginBottom: 16 },
+  statValue: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
+  statLabel: { fontSize: 12, fontWeight: '500' },
+  sectionTitle: { fontSize: FONTS.h3.size, fontWeight: '700', marginBottom: 16 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12 },
+  menuIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  menuContent: { flex: 1 },
+  menuTitle: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
+  menuSubtitle: { fontSize: 12 },
 });
 
 export default StudentProfileScreen;

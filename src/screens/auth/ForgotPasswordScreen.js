@@ -3,151 +3,99 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Alert,
   TouchableOpacity,
+  StatusBar,
+  SafeAreaView,
+  Alert,
 } from 'react-native';
-import Header from '../../components/common/Header';
-import Input from '../../components/common/Input';
-import Button from '../../components/buttons/Button';
-import { COLORS, SIZES } from '../../constants';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useTheme } from '../../theme/ThemeContext';
+import { FONTS, BORDER_RADIUS } from '../../constants';
+import ModernInput from '../../components/common/ModernInput';
+import ModernButton from '../../components/common/ModernButton';
+import ModernCard from '../../components/common/ModernCard';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
 
-  const validateEmail = () => {
-    if (!email) {
-      setError('Email is required');
-      return false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Email is invalid');
-      return false;
-    }
-    setError('');
-    return true;
+  const handleSend = () => {
+    if (!email) { Alert.alert('Error', 'Please enter your email'); return; }
+    setSent(true);
   };
 
-  const handleResetPassword = async () => {
-    if (!validateEmail()) return;
+  return React.createElement(SafeAreaView, { style: [styles.container, { backgroundColor: colors.primary }] },
+    React.createElement(StatusBar, { barStyle: 'light-content', backgroundColor: colors.primary }),
 
-    setIsLoading(true);
-    try {
-      // API call would go here
-      // await api.post('/auth/forgot-password', { email });
-      
-      // Mock success
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      Alert.alert(
-        'Reset Link Sent',
-        'A password reset link has been sent to your email address.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send reset link. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    React.createElement(View, { style: styles.header },
+      React.createElement(TouchableOpacity, {
+        onPress: () => navigation.goBack(),
+        style: [styles.backBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]
+      }, React.createElement(Icon, { name: 'arrow-back', size: 22, color: '#FFFFFF' })),
+      React.createElement(Text, { style: styles.headerTitle }, 'Reset Password')
+    ),
 
-  const handleEmailChange = (value) => {
-    setEmail(value);
-    if (error) {
-      setError('');
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Header title="Forgot Password" onBackPress={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Forgot Password</Text>
-        <Text style={styles.subtitle}>
-          Enter your email address and we'll send you a link to reset your password
-        </Text>
-      </View>
-
-      <View style={styles.form}>
-        <Input
-          label="Email Address"
-          value={email}
-          onChangeText={handleEmailChange}
-          placeholder="Enter your email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          error={error}
-        />
-
-        <Button
-          title="Send Reset Link"
-          onPress={handleResetPassword}
-          loading={isLoading}
-          style={styles.resetButton}
-        />
-
-        <TouchableOpacity
-          style={styles.backToLogin}
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.backToLoginText}>← Back to Login</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-    </View>
+    React.createElement(View, { style: styles.content },
+      !sent ? React.createElement(ModernCard, {
+        variant: 'elevated',
+        borderRadius: BORDER_RADIUS['3xl'],
+        padding: 28,
+        style: { width: '100%' },
+      },
+        React.createElement(View, { style: [styles.iconBox, { backgroundColor: colors.primaryMuted }] },
+          React.createElement(Icon, { name: 'lock-open-outline', size: 32, color: colors.primary })
+        ),
+        React.createElement(Text, { style: [styles.title, { color: colors.dark }] }, 'Forgot Password?'),
+        React.createElement(Text, { style: [styles.subtitle, { color: colors.gray }] }, 'Enter your email to receive reset instructions'),
+        React.createElement(View, { style: { height: 8 } }),
+        React.createElement(ModernInput, {
+          label: 'Email Address',
+          value: email,
+          onChangeText: setEmail,
+          placeholder: 'your@email.com',
+          keyboardType: 'email-address',
+          leftIcon: 'mail-outline',
+        }),
+        React.createElement(ModernButton, {
+          title: 'Send Reset Link',
+          onPress: handleSend,
+          fullWidth: true,
+          size: 'lg',
+          style: { marginTop: 8 },
+        })
+      ) : React.createElement(ModernCard, {
+        variant: 'elevated',
+        borderRadius: BORDER_RADIUS['3xl'],
+        padding: 28,
+        style: { width: '100%', alignItems: 'center' },
+      },
+        React.createElement(View, { style: [styles.iconBox, { backgroundColor: colors.successLight }] },
+          React.createElement(Icon, { name: 'checkmark-circle-outline', size: 32, color: colors.success })
+        ),
+        React.createElement(Text, { style: [styles.title, { color: colors.dark }] }, 'Check Your Email'),
+        React.createElement(Text, { style: [styles.subtitle, { color: colors.gray, textAlign: 'center' }] }, 'We have sent password reset instructions to your email'),
+        React.createElement(ModernButton, {
+          title: 'Back to Login',
+          onPress: () => navigation.navigate('Login'),
+          variant: 'outline',
+          fullWidth: true,
+          style: { marginTop: 16 },
+        })
+      )
+    )
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  contentContainer: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 40,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FF6B35',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  form: {
-    flex: 1,
-  },
-  resetButton: {
-    marginTop: 20,
-  },
-  backToLogin: {
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  backToLoginText: {
-    color: '#FF6B35',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  headerTitle: { fontSize: FONTS.h1.size, fontWeight: '800', color: '#FFFFFF' },
+  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 40 },
+  iconBox: { width: 64, height: 64, borderRadius: 20, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 20 },
+  title: { fontSize: FONTS.h2.size, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: FONTS.bodySmall.size, textAlign: 'center', marginBottom: 16 },
 });
 
 export default ForgotPasswordScreen;

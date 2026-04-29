@@ -6,16 +6,19 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
-  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useTheme } from '../../theme/ThemeContext';
+import { BORDER_RADIUS, FONTS, DELIVERY_CHARGE } from '../../constants';
+import ModernCard from '../../components/common/ModernCard';
+import ModernButton from '../../components/common/ModernButton';
+import EmptyState from '../../components/common/EmptyState';
 import { removeFromCart, updateQuantity, clearCart } from '../../redux/slices/cartSlice';
-import Header from '../../components/common/Header';
-import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
-import Button from '../../components/buttons/Button';
 
 const CartScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { items: cartItems, totalItems } = useSelector(state => state.cart);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -23,365 +26,141 @@ const CartScreen = ({ navigation }) => {
   const finalTotal = subtotal + deliveryCharge;
 
   const handleQuantityChange = (productCategoryItemId, change) => {
-    const item = cartItems.find(
-      cartItem => String(cartItem.productCategoryItemId) === String(productCategoryItemId)
-    );
+    const item = cartItems.find(c => String(c.productCategoryItemId) === String(productCategoryItemId));
     if (!item) return;
-
-    const newQuantity = item.quantity + change;
-    if (newQuantity >= 1 && newQuantity <= 10) {
-      dispatch(updateQuantity({ productCategoryItemId, quantity: newQuantity }));
-    }
+    const newQty = item.quantity + change;
+    if (newQty >= 1 && newQty <= 10) dispatch(updateQuantity({ productCategoryItemId, quantity: newQty }));
   };
 
-  const handleRemoveItem = (productCategoryItemId) => {
-    Alert.alert(
-      'Remove Item',
-      'Are you sure you want to remove this item from cart?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Remove',
-          onPress: () => {
-            dispatch(removeFromCart(productCategoryItemId));
-          },
-        },
-      ]
-    );
+  const handleRemove = (id) => {
+    Alert.alert('Remove Item', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', onPress: () => dispatch(removeFromCart(id)) },
+    ]);
   };
 
-  const handleClearCart = () => {
-    Alert.alert(
-      'Clear Cart',
-      'Are you sure you want to clear all items from cart?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Clear',
-          onPress: () => {
-            dispatch(clearCart());
-          },
-        },
-      ]
-    );
+  const handleClear = () => {
+    Alert.alert('Clear Cart', 'Remove all items?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Clear', onPress: () => dispatch(clearCart()) },
+    ]);
   };
 
   const handleCheckout = () => {
-    if (cartItems.length === 0) {
-      Alert.alert('Cart Empty', 'Please add items to cart before checkout');
-      return;
-    }
-
-    navigation.navigate('Checkout', {
-      items: cartItems,
-    });
+    if (cartItems.length === 0) { Alert.alert('Cart Empty', 'Please add items first'); return; }
+    navigation.navigate('Checkout', { items: cartItems });
   };
 
-  const renderCartItem = ({ item }) => {
-    const imageUri = item.imageUrl || item.image;
+  const renderItem = ({ item }) => React.createElement(ModernCard, {
+    variant: 'elevated',
+    borderRadius: BORDER_RADIUS.xl,
+    padding: 16,
+    style: { marginHorizontal: 16, marginBottom: 12 },
+  },
+    React.createElement(View, { style: { flexDirection: 'row', alignItems: 'center' } },
+      React.createElement(View, { style: [styles.itemImage, { backgroundColor: colors.light }] },
+        React.createElement(Icon, { name: 'cube-outline', size: 28, color: colors.primary })
+      ),
+      React.createElement(View, { style: { flex: 1, marginLeft: 14 } },
+        React.createElement(Text, { style: [styles.itemName, { color: colors.dark }] }, item.name),
+        React.createElement(Text, { style: [styles.itemPrice, { color: colors.primary }] }, 'PKR ' + item.price)
+      ),
+      React.createElement(View, { style: styles.qtyContainer },
+        React.createElement(TouchableOpacity, {
+          style: [styles.qtyBtn, { backgroundColor: colors.light }],
+          onPress: () => handleQuantityChange(item.productCategoryItemId, -1),
+        }, React.createElement(Icon, { name: 'remove', size: 16, color: colors.dark })),
+        React.createElement(Text, { style: [styles.qtyText, { color: colors.dark }] }, String(item.quantity)),
+        React.createElement(TouchableOpacity, {
+          style: [styles.qtyBtn, { backgroundColor: colors.light }],
+          onPress: () => handleQuantityChange(item.productCategoryItemId, 1),
+        }, React.createElement(Icon, { name: 'add', size: 16, color: colors.dark }))
+      ),
+      React.createElement(TouchableOpacity, {
+        style: [styles.removeBtn, { backgroundColor: colors.dangerLight }],
+        onPress: () => handleRemove(item.productCategoryItemId),
+      }, React.createElement(Icon, { name: 'trash-outline', size: 16, color: colors.danger }))
+    )
+  );
 
-    return (
-      <View style={styles.cartItem}>
-        {imageUri ? (
-          <Image
-            source={{ uri: imageUri }}
-            style={styles.itemImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.itemImagePlaceholder} />
-        )}
-
-        <View style={styles.itemInfo}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          <Text style={styles.itemPrice}>PKR {item.price}</Text>
-        </View>
-
-        <View style={styles.quantityContainer}>
-          <TouchableOpacity
-            style={styles.quantityButton}
-            onPress={() => handleQuantityChange(item.productCategoryItemId, -1)}
-            disabled={item.quantity <= 1}
-          >
-            <Text style={[
-              styles.quantityButtonText,
-              item.quantity <= 1 && styles.quantityButtonTextDisabled,
-            ]}
-            >
-              -
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.quantityValue}>
-            <Text style={styles.quantityNumber}>{item.quantity}</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.quantityButton}
-            onPress={() => handleQuantityChange(item.productCategoryItemId, 1)}
-            disabled={item.quantity >= 10}
-          >
-            <Text style={[
-              styles.quantityButtonText,
-              item.quantity >= 10 && styles.quantityButtonTextDisabled,
-            ]}
-            >
-              +
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleRemoveItem(item.productCategoryItemId)}
-        >
-          <Text style={styles.removeButtonText}>x</Text>
-        </TouchableOpacity>
-      </View>
+  if (cartItems.length === 0) {
+    return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
+      React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
+        React.createElement(Text, { style: styles.headerTitle }, 'Shopping Cart')
+      ),
+      React.createElement(EmptyState, {
+        icon: 'cart-outline',
+        title: 'Your cart is empty',
+        subtitle: 'Add some items to get started',
+        actionTitle: 'Start Shopping',
+        onAction: () => navigation.navigate('Home'),
+      })
     );
-  };
+  }
 
-  const renderEmptyCart = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>Your cart is empty</Text>
-      <Text style={styles.emptySubtitle}>
-        Add some items to get started.
-      </Text>
-      <Button
-        title="Start Shopping"
-        onPress={() => navigation.navigate('Home')}
-        style={styles.shopButton}
-      />
-    </View>
-  );
+  return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
+    React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
+      React.createElement(View, { style: styles.headerTop },
+        React.createElement(Text, { style: styles.headerTitle }, 'Shopping Cart'),
+        React.createElement(TouchableOpacity, { onPress: handleClear },
+          React.createElement(Text, { style: { color: 'rgba(255,255,255,0.9)', fontSize: 14 } }, 'Clear')
+        )
+      ),
+      React.createElement(Text, { style: styles.headerSubtitle }, totalItems + ' items in your cart')
+    ),
 
-  const renderCartSummary = () => (
-    <View style={styles.summaryContainer}>
-      <View style={styles.summaryRow}>
-        <Text style={styles.summaryLabel}>Subtotal ({totalItems} items)</Text>
-        <Text style={styles.summaryValue}>PKR {subtotal}</Text>
-      </View>
-      <View style={styles.summaryRow}>
-        <Text style={styles.summaryLabel}>Delivery Charge</Text>
-        <Text style={styles.summaryValue}>PKR {deliveryCharge}</Text>
-      </View>
-      <View style={[styles.summaryRow, styles.totalRow]}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>PKR {finalTotal}</Text>
-      </View>
-    </View>
-  );
+    React.createElement(FlatList, {
+      data: cartItems,
+      renderItem: renderItem,
+      keyExtractor: (item) => item.productCategoryItemId.toString(),
+      contentContainerStyle: { paddingTop: 16, paddingBottom: 200 },
+      showsVerticalScrollIndicator: false,
+    }),
 
-  return (
-    <View style={styles.container}>
-      <Header
-        title="Shopping Cart"
-        rightComponent={
-          cartItems.length > 0 ? (
-            <TouchableOpacity onPress={handleClearCart}>
-              <Text style={styles.clearButton}>Clear</Text>
-            </TouchableOpacity>
-          ) : null
-        }
-      />
-
-      {cartItems.length === 0 ? (
-        renderEmptyCart()
-      ) : (
-        <>
-          <FlatList
-            data={cartItems}
-            renderItem={renderCartItem}
-            keyExtractor={(item) => item.productCategoryItemId.toString()}
-            contentContainerStyle={styles.cartList}
-            showsVerticalScrollIndicator={false}
-          />
-
-          {renderCartSummary()}
-
-          <View style={styles.checkoutContainer}>
-            <Button
-              title={`Checkout (PKR ${finalTotal})`}
-              onPress={handleCheckout}
-              style={styles.checkoutButton}
-            />
-          </View>
-        </>
-      )}
-    </View>
+    React.createElement(View, { style: [styles.summaryCard, { backgroundColor: colors.surface }] },
+      React.createElement(View, { style: styles.summaryRow },
+        React.createElement(Text, { style: [styles.summaryLabel, { color: colors.gray }] }, 'Subtotal (' + totalItems + ' items)'),
+        React.createElement(Text, { style: [styles.summaryValue, { color: colors.dark }] }, 'PKR ' + subtotal)
+      ),
+      React.createElement(View, { style: styles.summaryRow },
+        React.createElement(Text, { style: [styles.summaryLabel, { color: colors.gray }] }, 'Delivery'),
+        React.createElement(Text, { style: [styles.summaryValue, { color: colors.dark }] }, 'PKR ' + deliveryCharge)
+      ),
+      React.createElement(View, { style: [styles.summaryRow, styles.totalRow, { borderTopColor: colors.light }] },
+        React.createElement(Text, { style: [styles.totalLabel, { color: colors.dark }] }, 'Total'),
+        React.createElement(Text, { style: [styles.totalValue, { color: colors.primary }] }, 'PKR ' + finalTotal)
+      ),
+      React.createElement(ModernButton, {
+        title: 'Checkout - PKR ' + finalTotal,
+        onPress: handleCheckout,
+        fullWidth: true,
+        size: 'lg',
+        style: { marginTop: 16 },
+      })
+    )
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.light,
-  },
-  cartList: {
-    padding: SIZES.padding,
-  },
-  cartItem: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: SIZES.padding,
-    marginBottom: SIZES.base,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  itemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: SIZES.radius,
-    marginRight: SIZES.padding,
-  },
-  itemImagePlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: SIZES.radius,
-    marginRight: SIZES.padding,
-    backgroundColor: COLORS.light,
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: 2,
-  },
-  itemPrice: {
-    fontSize: SIZES.font,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: SIZES.padding,
-  },
-  quantityButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quantityButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  quantityButtonTextDisabled: {
-    color: COLORS.gray,
-  },
-  quantityValue: {
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  quantityNumber: {
-    fontSize: SIZES.font,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-  },
-  removeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.danger,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  removeButtonText: {
-    fontSize: 18,
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  summaryContainer: {
-    backgroundColor: COLORS.white,
-    padding: SIZES.padding,
-    marginHorizontal: SIZES.padding,
-    marginBottom: SIZES.padding,
-    borderRadius: SIZES.radius,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SIZES.base,
-  },
-  summaryLabel: {
-    fontSize: SIZES.font,
-    color: COLORS.gray,
-  },
-  summaryValue: {
-    fontSize: SIZES.font,
-    color: COLORS.dark,
-    fontWeight: '600',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.light,
-    paddingTop: SIZES.base,
-    marginTop: SIZES.base,
-  },
-  totalLabel: {
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-  },
-  totalValue: {
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  checkoutContainer: {
-    padding: SIZES.padding,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.light,
-  },
-  checkoutButton: {
-    marginBottom: 0,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SIZES.padding * 2,
-  },
-  emptyTitle: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: SIZES.base,
-  },
-  emptySubtitle: {
-    fontSize: SIZES.font,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginBottom: SIZES.padding * 2,
-  },
-  shopButton: {
-    marginBottom: 0,
-  },
-  clearButton: {
-    fontSize: SIZES.font,
-    color: COLORS.danger,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  headerTitle: { fontSize: FONTS.h1.size, fontWeight: '800', color: '#FFFFFF' },
+  headerSubtitle: { fontSize: FONTS.bodySmall.size, color: 'rgba(255,255,255,0.8)' },
+  itemImage: { width: 56, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  itemName: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
+  itemPrice: { fontSize: 14, fontWeight: '700' },
+  qtyContainer: { flexDirection: 'row', alignItems: 'center', marginRight: 12 },
+  qtyBtn: { width: 32, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginHorizontal: 4 },
+  qtyText: { fontSize: 15, fontWeight: '700', minWidth: 24, textAlign: 'center' },
+  removeBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  summaryCard: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24, ...require('../../constants').SHADOWS.xl },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  summaryLabel: { fontSize: 14 },
+  summaryValue: { fontSize: 14, fontWeight: '600' },
+  totalRow: { borderTopWidth: 1, paddingTop: 12, marginTop: 4, marginBottom: 4 },
+  totalLabel: { fontSize: 18, fontWeight: '700' },
+  totalValue: { fontSize: 18, fontWeight: '700' },
 });
 
 export default CartScreen;
