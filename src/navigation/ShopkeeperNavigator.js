@@ -38,7 +38,10 @@ const OrdersStack = () => (
 const ShopkeeperNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <CustomTabBar {...props} />}
-    screenOptions={{ headerShown: false }}
+    screenOptions={{
+      headerShown: false,
+      contentStyle: { paddingBottom: 110 }
+    }}
   >
     <Tab.Screen name="Dashboard" component={DashboardStack} options={{ tabBarLabel: 'Dashboard' }} />
     <Tab.Screen name="Products" component={ProductsStack} options={{ tabBarLabel: 'Products' }} />

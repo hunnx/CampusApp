@@ -46,7 +46,10 @@ const StudentNavigator = () => {
   return (
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { paddingBottom: 110 }
+      }}
     >
       <Tab.Screen name="Home" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Cart" component={CartStack} options={{ tabBarLabel: 'Cart' }} />

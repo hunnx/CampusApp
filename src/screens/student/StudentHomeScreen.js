@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from '../../components/common/Header';
@@ -15,6 +15,7 @@ import { fetchProducts } from '../../redux/slices/productSlice';
 
 const StudentHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+
   const { products, isLoading, error } = useSelector(state => state.products);
   const [refreshing, setRefreshing] = useState(false);
   
@@ -81,6 +82,7 @@ const StudentHomeScreen = ({ navigation }) => {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
+
       )}
       <FlatList
         style={styles.scrollView}
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
   },
   columnWrapper: {
     justifyContent: 'space-between',
-    marginBottom: SIZES.base * 2,
+    marginBottom: 24,
   },
   productCard: {
     flex: 1,
@@ -145,8 +147,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   productImage: {
-    height: 80,
-    backgroundColor: '#f8f9fa',
+    height: 120,
+    backgroundColor: COLORS.lightSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     borderTopLeftRadius: SIZES.radius,
@@ -156,7 +158,9 @@ const styles = StyleSheet.create({
     fontSize: 40,
   },
   productInfo: {
-    padding: SIZES.base,
+    padding: SIZES.padding,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   productName: {
     fontSize: SIZES.font,
@@ -176,14 +180,14 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.base / 2,
   },
   availabilityBadge: {
-    paddingHorizontal: SIZES.base,
-    paddingVertical: 2,
-    borderRadius: SIZES.radius,
+    paddingHorizontal: SIZES.padding,
+    paddingVertical: 4,
+    borderRadius: 20,
     alignSelf: 'flex-start',
   },
   availabilityText: {
     color: COLORS.white,
-    fontSize: SIZES.font - 4,
+    fontSize: 12,
     fontWeight: '600',
   },
   loadingContainer: {

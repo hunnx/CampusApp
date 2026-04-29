@@ -37,7 +37,10 @@ const HistoryStack = () => (
 const DelivererNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <CustomTabBar {...props} />}
-    screenOptions={{ headerShown: false }}
+    screenOptions={{
+      headerShown: false,
+      contentStyle: { paddingBottom: 110 }
+    }}
   >
     <Tab.Screen name="Available" component={AvailableOrdersStack} options={{ tabBarLabel: 'Available' }} />
     <Tab.Screen name="Active" component={ActiveDeliveryStack} options={{ tabBarLabel: 'Active' }} />

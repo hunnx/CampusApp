@@ -131,7 +131,7 @@ const AvailableOrdersScreen = ({ navigation }) => {
       data: available,
       renderItem: renderOrder,
       keyExtractor: (item) => String(item.id),
-      contentContainerStyle: { paddingTop: 16, paddingBottom: 40 },
+      contentContainerStyle: { paddingTop: 16, paddingBottom: 110 },
       showsVerticalScrollIndicator: false,
       ListHeaderComponent: renderStatsBar,
     })

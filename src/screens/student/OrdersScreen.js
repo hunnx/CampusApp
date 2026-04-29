@@ -121,7 +121,7 @@ const OrdersScreen = ({ navigation }) => {
     React.createElement(FlatList, {
       data: filtered,
       keyExtractor: (item, index) => String(item?.id || index),
-      contentContainerStyle: { paddingHorizontal: 16, paddingBottom: 100 },
+      contentContainerStyle: { paddingHorizontal: 16, paddingBottom: 110 },
       showsVerticalScrollIndicator: false,
       refreshControl: React.createElement(RefreshControl, { refreshing, onRefresh, colors: [colors.primary] }),
       ListEmptyComponent: !isLoading ? React.createElement(EmptyState, {
