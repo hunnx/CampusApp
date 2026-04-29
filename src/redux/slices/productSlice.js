@@ -6,6 +6,9 @@ const normalizeProductsPayload = (payload) => {
   if (Array.isArray(payload)) {
     return payload;
   }
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
   if (Array.isArray(payload?.products)) {
     return payload.products;
   }
@@ -29,9 +32,34 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('[productSlice] Fetching products from API...');
+      console.log('[productSlice] API instance:', api);
+      console.log('[productSlice] API baseURL:', api.defaults.baseURL);
+      console.log('[productSlice] api.get function:', typeof api.get);
+      console.log('[productSlice] About to call api.get(/Products)');
+
+      const startTime = Date.now();
+      console.log('[productSlice] Calling api.get now...');
+      console.log('[productSlice] Calling api.get now2222');
+
       const response = await api.get('/Products');
-      return normalizeProductsPayload(response).map(transformProduct);
+      const endTime = Date.now();
+
+      console.log('[productSlice] API response received after', endTime - startTime, 'ms');
+      console.log('[productSlice] API response:', response);
+      console.log('[productSlice] Response type:', typeof response);
+      console.log('[productSlice] Response is array:', Array.isArray(response));
+      const normalized = normalizeProductsPayload(response);
+      console.log('[productSlice] Normalized products:', normalized);
+      console.log('[productSlice] Normalized is array:', Array.isArray(normalized));
+      const transformed = normalized.map(transformProduct);
+      console.log('[productSlice] Transformed products:', transformed);
+      return transformed;
     } catch (error) {
+      console.error('[productSlice] Fetch error:', error);
+      console.error('[productSlice] Error message:', error.message);
+      console.error('[productSlice] Error response:', error.response);
+      console.error('[productSlice] Error code:', error.code);
       return rejectWithValue(getProductErrorMessage(error, 'Failed to fetch products'));
     }
   }
