@@ -13,19 +13,70 @@ import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
 import { COLORS, SIZES, ORDER_STATUS, CONTENT_BOTTOM_PADDING } from '../../constants';
 
+// Safe parsing utility functions for OrderTrackingScreen
+const safeParseNumber = (value, fallback = 0) => {
+  if (value === null || value === undefined) return fallback;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
+const safeParseString = (value, fallback = '') => {
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+};
+
+const safeParseDate = (value, fallback = null) => {
+  if (!value) return fallback;
+  try {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? fallback : date;
+  } catch {
+    return fallback;
+  }
+};
+
+const safeGetOrderId = (order) => {
+  const id = safeParseString(order?.id, '');
+  return id ? '#' + id.slice(-6) : '#N/A';
+};
+
+const safeGetItems = (items) => {
+  return Array.isArray(items) ? items : [];
+};
+
 const OrderTrackingScreen = ({ route, navigation }) => {
   const { orders } = useSelector(state => state.orders);
   const insets = useSafeAreaInsets();
   
   const { orderId } = route.params || {};
   const [order, setOrder] = useState(null);
+  const [error, setError] = useState(null);
   
   // Calculate bottom padding to ensure content doesn't hide behind tab bar
   const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 20;
 
   const loadOrderDetails = useCallback(() => {
-    const foundOrder = orders.find(o => String(o.id) === String(orderId));
-    setOrder(foundOrder);
+    console.log('[OrderTrackingScreen] Loading order details for orderId:', orderId);
+    console.log('[OrderTrackingScreen] Available orders:', orders?.length);
+    
+    try {
+      const foundOrder = orders.find(o => String(o.id) === String(orderId));
+      
+      if (!foundOrder) {
+        console.log('[OrderTrackingScreen] Order not found');
+        setError('Order not found');
+        setOrder(null);
+        return;
+      }
+      
+      console.log('[OrderTrackingScreen] Found order:', JSON.stringify(foundOrder, null, 2));
+      setOrder(foundOrder);
+      setError(null);
+    } catch (err) {
+      console.error('[OrderTrackingScreen] Error loading order:', err);
+      setError(err?.message || 'Failed to load order');
+      setOrder(null);
+    }
   }, [orderId, orders]);
 
   useEffect(() => {
@@ -138,8 +189,23 @@ const OrderTrackingScreen = ({ route, navigation }) => {
     );
   };
 
-  const renderOrderInfo = () => {
+const renderOrderInfo = () => {
     if (!order) return null;
+
+    // Use safe parsing to prevent type casting errors
+    const orderIdDisplay = safeGetOrderId(order);
+    const shopkeeperName = safeParseString(order.shopkeeperName, 'N/A');
+    const pickupLocation = safeParseString(order.pickupLocation, 'N/A');
+    const dropLocation = safeParseString(order.dropLocation, 'N/A');
+    const contactNumber = safeParseString(order.contactNumber, 'N/A');
+    const createdAt = safeParseDate(order.createdAt);
+    const createdAtString = createdAt ? createdAt.toLocaleString() : 'N/A';
+    
+    console.log('[OrderTrackingScreen] Rendering order info:', {
+      orderIdDisplay,
+      shopkeeperName,
+      createdAtString,
+    });
 
     return (
       <View style={styles.orderInfo}>
@@ -147,64 +213,88 @@ const OrderTrackingScreen = ({ route, navigation }) => {
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Order ID:</Text>
-          <Text style={styles.infoValue}>#{String(order.id).slice(-6)}</Text>
+          <Text style={styles.infoValue}>{orderIdDisplay}</Text>
         </View>
         
-        {order.shopkeeperName ? (
+        {shopkeeperName ? (
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Shop:</Text>
-            <Text style={styles.infoValue}>{order.shopkeeperName}</Text>
+            <Text style={styles.infoValue}>{shopkeeperName}</Text>
           </View>
         ) : null}
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Pickup Location:</Text>
-          <Text style={styles.infoValue}>{order.pickupLocation}</Text>
+          <Text style={styles.infoValue}>{pickupLocation}</Text>
         </View>
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Delivery Location:</Text>
-          <Text style={styles.infoValue}>{order.dropLocation}</Text>
+          <Text style={styles.infoValue}>{dropLocation}</Text>
         </View>
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Contact:</Text>
-          <Text style={styles.infoValue}>{order.contactNumber}</Text>
+          <Text style={styles.infoValue}>{contactNumber}</Text>
         </View>
         
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Order Time:</Text>
           <Text style={styles.infoValue}>
-            {new Date(order.createdAt).toLocaleString()}
+            {createdAtString}
           </Text>
         </View>
       </View>
     );
   };
 
-  const renderOrderItems = () => {
+const renderOrderItems = () => {
     if (!order || !order.items) return null;
+
+    // Use safe parsing to prevent type casting errors
+    const items = safeGetItems(order.items);
+    const totalAmount = safeParseNumber(order.totalAmount, 0);
+    
+    console.log('[OrderTrackingScreen] Rendering items:', {
+      itemsCount: items.length,
+      totalAmount,
+    });
 
     return (
       <View style={styles.orderItems}>
         <Text style={styles.sectionTitle}>Order Items</Text>
-        {order.items.map((item, index) => (
-          <View key={index} style={styles.orderItem}>
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemDetails}>
-                {item.quantity}x PKR {item.price}
+        {items.map((item, index) => {
+          // Safe parsing for each item
+          const itemName = safeParseString(item.name, 'Unknown Item');
+          const itemPrice = safeParseNumber(item.price, 0);
+          const itemQuantity = safeParseNumber(item.quantity, 0);
+          const itemTotal = itemPrice * itemQuantity;
+          
+          console.log(`[OrderTrackingScreen] Item ${index}:`, {
+            name: itemName,
+            price: itemPrice,
+            quantity: itemQuantity,
+            total: itemTotal,
+          });
+          
+          return (
+            <View key={index} style={styles.orderItem}>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{itemName}</Text>
+                <Text style={styles.itemDetails}>
+                  {itemQuantity}x PKR {itemPrice}
+                </Text>
+              </View>
+              <Text style={styles.itemTotal}>
+                PKR {itemTotal}
               </Text>
             </View>
-            <Text style={styles.itemTotal}>
-              PKR {item.price * item.quantity}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
         
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount:</Text>
-          <Text style={styles.totalValue}>PKR {order.totalAmount}</Text>
+          <Text style={styles.totalValue}>PKR {totalAmount}</Text>
         </View>
       </View>
     );
@@ -248,12 +338,12 @@ const OrderTrackingScreen = ({ route, navigation }) => {
     ) : null;
   };
 
-if (!order) {
+if (!order || error) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Order not found</Text>
-        <Text style={styles.errorText}>Order ID: {orderId}</Text>
-        <Text style={styles.errorText}>Available orders: {orders.length}</Text>
+        <Text style={styles.loadingText}>{error || 'Order not found'}</Text>
+        <Text style={styles.errorText}>Order ID: {safeParseString(orderId, 'N/A')}</Text>
+        <Text style={styles.errorText}>Available orders: {safeParseNumber(orders?.length, 0)}</Text>
         <Button 
           title="Go Back" 
           onPress={() => navigation.goBack()} 
@@ -263,12 +353,12 @@ if (!order) {
     );
   }
 
-  return (
+return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header title="Order Tracking" onBackPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={[styles.contentContainer, { paddingBottom: bottomPadding }]}>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-          <Text style={styles.statusText}>{order.status?.toUpperCase() || 'UNKNOWN'}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order?.status) }]}>
+          <Text style={styles.statusText}>{safeParseString(order?.status, 'unknown').toUpperCase()}</Text>
         </View>
 
         {renderTimeline()}

@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import CustomTabBar from './CustomTabBar';
-import { CONTENT_BOTTOM_PADDING } from '../constants';
+import { CONTENT_BOTTOM_PADDING, TAB_BAR_TOTAL_HEIGHT } from '../constants';
 
 import StudentHomeScreen from '../screens/student/StudentHomeScreen';
 import CartScreen from '../screens/student/CartScreen';
@@ -11,6 +11,9 @@ import StudentProfileScreen from '../screens/student/StudentProfileScreen';
 import ProductDetailScreen from '../screens/student/ProductDetailScreen';
 import CheckoutScreen from '../screens/student/CheckoutScreen';
 import OrderTrackingScreen from '../screens/student/OrderTrackingScreen';
+
+// Calculate bottom padding: TAB_BAR_TOTAL_HEIGHT (88px) + safe area + extra buffer
+const TAB_BAR_PADDING = TAB_BAR_TOTAL_HEIGHT + 20;
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();

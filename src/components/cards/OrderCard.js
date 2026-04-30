@@ -4,9 +4,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from 'react-native';
-import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
+import { COLORS, SIZES, ORDER_STATUS, BORDER_RADIUS, SHADOWS } from '../../constants';
 
 const OrderCard = ({
   order,
@@ -35,8 +34,51 @@ const OrderCard = ({
     }
   };
 
+  const getStatusBgColor = (status) => {
+    switch (status) {
+      case ORDER_STATUS.PENDING:
+        return COLORS.warningLight;
+      case ORDER_STATUS.PREPARING:
+        return COLORS.primaryMuted;
+      case ORDER_STATUS.READY:
+        return COLORS.successLight;
+      case ORDER_STATUS.PICKED:
+        return COLORS.secondaryLight || 'rgba(147, 197, 253, 0.3)';
+      case ORDER_STATUS.DELIVERED:
+        return COLORS.successLight;
+      case ORDER_STATUS.COMPLETED:
+        return COLORS.successLight;
+      default:
+        return COLORS.light;
+    }
+  };
+
   const getStatusText = (status) => {
+    if (!status) return 'Unknown';
     return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const today = new Date();
+    const isToday = date.toDateString() === today.toDateString();
+    
+    if (isToday) {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    }
+    
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   const renderOrderItems = () => {
@@ -110,34 +152,47 @@ const OrderCard = ({
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={() => onPress && onPress(order)}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
+      {/* Header: Order ID + Status */}
       <View style={styles.header}>
         <View style={styles.orderInfo}>
           <Text style={styles.orderId}>Order #{order.id ? String(order.id).slice(-6) : 'N/A'}</Text>
           <Text style={styles.orderTime}>
-            {order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}
+            {formatDate(order.createdAt)}
           </Text>
         </View>
-        <View style={[styles.statusContainer, { backgroundColor: getStatusColor(order.status) }]}>
-          <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
+        <View style={[
+          styles.statusContainer, 
+          { backgroundColor: getStatusBgColor(order.status) }
+        ]}>
+          <View style={[styles.statusDot, { backgroundColor: getStatusColor(order.status) }]} />
+          <Text style={[styles.statusText, { color: getStatusColor(order.status) }]}>
+            {getStatusText(order.status)}
+          </Text>
         </View>
       </View>
 
+      {/* Items List */}
       <View style={styles.content}>
         {renderOrderItems()}
         
         <View style={styles.divider} />
         
+        {/* Footer: Location + Price */}
         <View style={styles.footer}>
           <View style={styles.locationInfo}>
+            <Text style={styles.locationLabel}>📍 Delivery</Text>
             <Text style={styles.locationText} numberOfLines={1}>
-              📍 {order.pickupLocation || 'N/A'} → {order.dropLocation || 'N/A'}
+              {order.dropLocation || 'Location not set'}
             </Text>
           </View>
           <View style={styles.priceInfo}>
+            <Text style={styles.totalAmountLabel}>Total</Text>
             <Text style={styles.totalAmount}>PKR {order.totalAmount || 0}</Text>
-            <Text style={styles.deliveryCharge}>+ PKR {order.deliveryCharge || 0} delivery</Text>
+            {order.deliveryCharge > 0 && (
+              <Text style={styles.deliveryCharge}>+ PKR {order.deliveryCharge} delivery</Text>
+            )}
           </View>
         </View>
       </View>
@@ -150,70 +205,79 @@ const OrderCard = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: SIZES.padding,
-    marginBottom: SIZES.base,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: BORDER_RADIUS['2xl'],
+    padding: 20,
+    ...SHADOWS.lg,
+    shadowOpacity: 0.08,
   },
+  
+  // Header Styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SIZES.base,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
   orderInfo: {
     flex: 1,
   },
   orderId: {
     fontSize: SIZES.font + 2,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: COLORS.dark,
+    letterSpacing: 0.3,
   },
   orderTime: {
     fontSize: SIZES.font - 2,
     color: COLORS.gray,
-    marginTop: 2,
+    marginTop: 4,
   },
   statusContainer: {
-    paddingHorizontal: SIZES.base,
-    paddingVertical: SIZES.base / 2,
-    borderRadius: SIZES.radius / 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
   statusText: {
-    color: COLORS.white,
     fontSize: SIZES.font - 2,
     fontWeight: '600',
   },
+
+  // Content Styles
   content: {
-    marginBottom: SIZES.base,
+    marginBottom: 4,
   },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SIZES.base / 2,
+    paddingVertical: 8,
   },
   itemName: {
     fontSize: SIZES.font,
-    color: COLORS.dark,
+    color: COLORS.darkSecondary,
     flex: 1,
+    fontWeight: '500',
   },
   itemDetails: {
     fontSize: SIZES.font - 1,
     color: COLORS.gray,
+    marginLeft: 12,
   },
   divider: {
     height: 1,
     backgroundColor: COLORS.light,
-    marginVertical: SIZES.base,
+    marginVertical: 12,
   },
+
+  // Footer Styles
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -221,36 +285,49 @@ const styles = StyleSheet.create({
   },
   locationInfo: {
     flex: 1,
-    marginRight: SIZES.base,
+    marginRight: 16,
+  },
+  locationLabel: {
+    fontSize: SIZES.font - 2,
+    color: COLORS.gray,
+    marginBottom: 2,
   },
   locationText: {
-    fontSize: SIZES.font - 1,
-    color: COLORS.gray,
+    fontSize: SIZES.font,
+    color: COLORS.darkSecondary,
+    fontWeight: '500',
   },
   priceInfo: {
     alignItems: 'flex-end',
   },
+  totalAmountLabel: {
+    fontSize: SIZES.font - 2,
+    color: COLORS.gray,
+    marginBottom: 2,
+  },
   totalAmount: {
-    fontSize: SIZES.font + 2,
-    fontWeight: 'bold',
+    fontSize: SIZES.h3,
+    fontWeight: '700',
     color: COLORS.dark,
   },
   deliveryCharge: {
     fontSize: SIZES.font - 2,
     color: COLORS.gray,
+    marginTop: 2,
   },
+
+  // Actions
   actionsContainer: {
-    marginTop: SIZES.base,
+    marginTop: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   actionButton: {
     flex: 1,
-    paddingVertical: SIZES.base,
-    paddingHorizontal: SIZES.base,
-    borderRadius: SIZES.radius,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: BORDER_RADIUS.xl,
     alignItems: 'center',
-    marginHorizontal: SIZES.base / 2,
   },
   preparingButton: {
     backgroundColor: COLORS.primary,
@@ -264,7 +341,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: COLORS.white,
     fontWeight: '600',
-    fontSize: SIZES.font - 1,
+    fontSize: SIZES.font,
   },
 });
 

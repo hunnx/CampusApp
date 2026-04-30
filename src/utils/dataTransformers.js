@@ -22,6 +22,25 @@ const toInteger = (value) => {
   return Number.isNaN(parsedValue) ? null : parsedValue;
 };
 
+// Safe numeric parser - converts any value to a valid number with fallback
+const toNumber = (value, fallback = 0) => {
+  if (value === null || value === undefined) return fallback;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
+// Safe string converter - ensures value is a string with fallback
+const toString = (value, fallback = '') => {
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+};
+
+// Safe array parser - ensures value is an array with fallback
+const toArray = (value, fallback = []) => {
+  if (!value) return fallback;
+  return Array.isArray(value) ? value : fallback;
+};
+
 const transformKeysToCamelCase = (obj) => {
   if (obj === null || obj === undefined) {
     return obj;
@@ -59,33 +78,59 @@ export const transformAuthResponse = (backendResponse) => {
 
 export const transformOrder = (backendOrder) => {
   const transformed = transformKeysToCamelCase(backendOrder);
+  
+  // Log raw response for debugging API data issues
+  console.log('[transformOrder] Raw backend order:', JSON.stringify(backendOrder, null, 2));
+  console.log('[transformOrder] Transformed keys:', JSON.stringify(transformed, null, 2));
+  
+  // Safely parse items array
+  const itemsArray = toArray(transformed.orderItems || transformed.items);
+  console.log('[transformOrder] Items array:', JSON.stringify(itemsArray, null, 2));
+  
+  // Transform each item with safe numeric conversion
+  const transformedItems = itemsArray.map((item, index) => {
+    const itemPrice = toNumber(item.unitPrice || item.price, 0);
+    const itemQuantity = toNumber(item.quantity, 0);
+    const itemSubtotal = toNumber(item.subtotal, itemPrice * itemQuantity);
+    
+    console.log(`[transformOrder] Item ${index}: price=${itemPrice}, quantity=${itemQuantity}, subtotal=${itemSubtotal}`);
+    
+    return {
+      id: toString(item.orderItemId || item.id, ''),
+      productCategoryItemId: toString(item.productCategoryItemId || item.productId, ''),
+      name: toString(item.productName || item.name, 'Unknown Item'),
+      price: itemPrice,
+      quantity: itemQuantity,
+      subtotal: itemSubtotal,
+    };
+  });
+  
+  // Safe numeric conversions
+  const orderTotalAmount = toNumber(transformed.totalAmount, 0);
+  const orderDeliveryCharge = toNumber(transformed.deliveryFee, 0);
+  
+  console.log('[transformOrder] Numeric values - totalAmount:', orderTotalAmount, 'deliveryCharge:', orderDeliveryCharge);
+  
   return {
-    id: transformed.orderId?.toString() || transformed.id,
-    orderId: transformed.orderId?.toString() || transformed.orderId,
-    studentId: transformed.customerId?.toString() || transformed.customerId,
-    studentName: transformed.customerName || transformed.studentName,
-    shopkeeperId: transformed.shopkeeperId?.toString() || transformed.shopkeeperId,
-    shopkeeperName: transformed.shopkeeperName,
-    delivererId: transformed.delivererId?.toString() || transformed.delivererId,
-    status: transformed.orderStatus?.toLowerCase() || transformed.status,
-    items: (transformed.orderItems || transformed.items || []).map(item => ({
-      id: item.orderItemId?.toString() || item.id,
-      productCategoryItemId: item.productCategoryItemId?.toString() || item.productId?.toString() || item.productId,
-      name: item.productName || item.name,
-      price: item.unitPrice || item.price,
-      quantity: item.quantity,
-      subtotal: item.subtotal || (item.unitPrice * item.quantity),
-    })),
-    totalAmount: transformed.totalAmount || 0,
-    deliveryCharge: transformed.deliveryFee || 0,
-    pickupLocation: pickFirstDefined(transformed.pickupPoint, transformed.pickupLocation, ''),
-    dropLocation: pickFirstDefined(transformed.destination, transformed.dropLocation, ''),
-    contactNumber: transformed.contactNumber || '',
-    orderNotes: transformed.specialNotes || transformed.orderNotes,
-    paymentMethod: transformed.paymentMethod || 'Cash',
-    paymentStatus: transformed.paymentStatus || 'Pending',
-    createdAt: transformed.dateAdded || transformed.createdAt,
-    updatedAt: transformed.dateUpdated || transformed.updatedAt,
+    id: toString(transformed.orderId || transformed.id, ''),
+    orderId: toString(transformed.orderId || transformed.orderId, ''),
+    studentId: toString(transformed.customerId || transformed.customerId, ''),
+    studentName: toString(transformed.customerName || transformed.studentName, 'Unknown'),
+    shopkeeperId: toString(transformed.shopkeeperId, ''),
+    shopkeeperName: toString(transformed.shopkeeperName, 'Unknown Shop'),
+    delivererId: toString(transformed.delivererId, ''),
+    status: toString(transformed.orderStatus || transformed.status, 'pending').toLowerCase(),
+    items: transformedItems,
+    totalAmount: orderTotalAmount,
+    deliveryCharge: orderDeliveryCharge,
+    pickupLocation: toString(transformed.pickupPoint || transformed.pickupLocation, 'Shop'),
+    dropLocation: toString(transformed.destination || transformed.dropLocation, 'N/A'),
+    contactNumber: toString(transformed.contactNumber, ''),
+    orderNotes: toString(transformed.specialNotes || transformed.orderNotes, ''),
+    paymentMethod: toString(transformed.paymentMethod, 'Cash'),
+    paymentStatus: toString(transformed.paymentStatus, 'Pending'),
+    createdAt: toString(transformed.dateAdded || transformed.createdAt, new Date().toISOString()),
+    updatedAt: toString(transformed.dateUpdated || transformed.updatedAt, new Date().toISOString()),
   };
 };
 
