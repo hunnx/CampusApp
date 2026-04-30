@@ -16,6 +16,7 @@ import { fetchOrders } from '../../redux/slices/orderSlice';
 import Header from '../../components/common/Header';
 import OrderCard from '../../components/cards/OrderCard';
 import { COLORS, SIZES, ORDER_STATUS, CONTENT_BOTTOM_PADDING, BORDER_RADIUS, SHADOWS } from '../../constants';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const OrdersScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -159,22 +160,17 @@ const OrdersScreen = ({ navigation }) => {
       
       {/* Custom Header with safe area */}
       <View style={[styles.headerContainer, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => navigation.goBack()}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={styles.backArrow}>←</Text>
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>My Orders</Text>
-            <Text style={styles.headerSubtitle}>
-              {Array.isArray(orders) ? orders.length : 0} orders total
-            </Text>
-          </View>
-          <View style={styles.headerRight} />
-        </View>
+<View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.backBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}
+        >
+          <Icon name="arrow-back" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My Orders</Text>
+        <Text style={styles.headerSubtitle}>Orders total</Text>
+      </View>
+
       </View>
 
       {/* Filter Tabs */}
@@ -218,7 +214,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.light,
   },
-  
+    backBtn: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+
   // Header Styles
   headerContainer: {
     backgroundColor: COLORS.primary,
@@ -226,38 +223,44 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: SIZES.padding,
-    paddingBottom: 16,
+    paddingVertical: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 4,
+    backgroundColor: 'rgba(254, 255, 254, 0.14)',
   },
   backArrow: {
     fontSize: 24,
     color: COLORS.white,
     fontWeight: 'bold',
+    lineHeight: 36,
   },
   headerTitleContainer: {
     flex: 1,
     marginLeft: 12,
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: SIZES.h2,
     fontWeight: 'bold',
     color: COLORS.white,
+    textAlign: 'left',
+    width: '100%',
+    marginRight: 12,
+    marginLeft: 12,
   },
   headerSubtitle: {
     fontSize: SIZES.font - 2,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0)',
     marginTop: 2,
+    display: 'none', // Hide subtitle for cleaner look
   },
   headerRight: {
-    width: 40,
+    width: 36,
   },
 
   // Filter Tabs - Modern Pill Style

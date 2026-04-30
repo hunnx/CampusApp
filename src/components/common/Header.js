@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   backButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginRight: 12,
   },
