@@ -103,7 +103,7 @@ const AvailableOrdersScreen = ({ navigation }) => {
 
   if (available.length === 0 && !isLoading) {
     return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
-      React.createElement(View, { style: [styles.header, { backgroundColor: colors.accent }] },
+      React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
         React.createElement(Text, { style: styles.headerTitle }, 'Available Orders')
       ),
       React.createElement(EmptyState, {

@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.light,
   },
 contentContainer: {
-    paddingBottom: 60,
+    paddingBottom: 88, // Added 12px extra for footer menu UI
   },
   profileHeader: {
     backgroundColor: COLORS.white,

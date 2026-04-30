@@ -40,7 +40,8 @@ const DelivererNavigator = () => (
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{
       headerShown: false,
-      contentStyle: { paddingBottom: CONTENT_BOTTOM_PADDING + 20 }
+      // Added 12px extra for footer menu UI in deliverer portal
+      contentStyle: { paddingTop: 20,paddingBottom: CONTENT_BOTTOM_PADDING + 100 }
     }}
   >
     <Tab.Screen name="Available" component={AvailableOrdersStack} options={{ tabBarLabel: 'Available' }} />

@@ -22,9 +22,32 @@ const LoginScreen = ({ navigation }) => {
   const { isLoading } = useSelector((state) => state.auth);
   const { colors } = useTheme();
 
-  const [email, setEmail] = useState('test3@example.com');
-  const [password, setPassword] = useState('Test123');
+  // Auto-fill credentials based on user role for testing
+  const getDefaultCredentials = (role) => {
+    switch (role) {
+      case 'student':
+        return { email: 'test3@example.com', password: '123456' };
+      case 'shopkeeper':
+        return { email: 'shop@campusconnect.com', password: '123456' };
+      case 'deliverer':
+        return { email: 'deliverer@shop.com', password: '123456' };
+      default:
+        return { email: '', password: '' };
+    }
+  };
+
   const [selectedRole, setSelectedRole] = useState('student');
+  const defaultCreds = getDefaultCredentials(selectedRole);
+  const [email, setEmail] = useState(defaultCreds.email);
+  const [password, setPassword] = useState(defaultCreds.password);
+
+  // Update credentials when role changes
+  const handleRoleChange = (role) => {
+    setSelectedRole(role);
+    const creds = getDefaultCredentials(role);
+    setEmail(creds.email);
+    setPassword(creds.password);
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -71,7 +94,7 @@ const LoginScreen = ({ navigation }) => {
             {roles.map(role => (
               <TouchableOpacity
                 key={role.key}
-                onPress={() => setSelectedRole(role.key)}
+                onPress={() => handleRoleChange(role.key)}
                 style={[
                   styles.roleOption,
                   {

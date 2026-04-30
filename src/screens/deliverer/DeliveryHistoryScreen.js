@@ -196,15 +196,14 @@ const DeliveryHistoryScreen = ({ navigation }) => {
     return filtered;
   };
 
-  const renderOrders = () => {
+const renderOrders = () => {
     const filteredOrders = getFilteredOrders();
 
     return (
       <FlatList
         data={filteredOrders}
         keyExtractor={(item) => String(item.id)}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
+        numColumns={1}
         renderItem={({ item }) => (
           <OrderCard
             order={item}
@@ -254,6 +253,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.light,
+    paddingBottom: 24,
   },
   header: {
     padding: SIZES.padding,
@@ -344,12 +344,12 @@ const styles = StyleSheet.create({
   filterBadgeTextActive: {
     color: COLORS.white,
   },
-  ordersContainer: {
+ordersContainer: {
     flex: 1,
   },
   ordersContent: {
     padding: SIZES.base,
-    paddingBottom: SIZES.padding * 4,
+    paddingBottom: SIZES.padding * 4 + 12, // Added 12px extra for footer menu UI
   },
   columnWrapper: {
     justifyContent: 'space-between',

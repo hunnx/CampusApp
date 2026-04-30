@@ -30,7 +30,7 @@ const CartScreen = ({ navigation }) => {
 
   // Calculate the bottom padding needed to prevent the summary card from being hidden
   // behind the tab bar. Tab bar is at bottom: 16 with height: 72, so total ~88px
-  const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 20;
+  const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 48;
 
   const handleQuantityChange = (productCategoryItemId, change) => {
     const item = cartItems.find(c => String(c.productCategoryItemId) === String(productCategoryItemId));
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   qtyBtn: { width: 32, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginHorizontal: 4 },
   qtyText: { fontSize: 15, fontWeight: '700', minWidth: 24, textAlign: 'center' },
   removeBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  summaryCard: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24, ...require('../../constants').SHADOWS.xl },
+  summaryCard: { position: 'absolute', bottom: 108, left: 0, right: 0, padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24, shadowColor: '#969393', shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.8, shadowRadius: 6, elevation: 5   },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   summaryLabel: { fontSize: 14 },
   summaryValue: { fontSize: 14, fontWeight: '600' },
