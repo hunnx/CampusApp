@@ -7,18 +7,24 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  SafeAreaView,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { addToCart } from '../../redux/slices/cartSlice';
 import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
-import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
+import { COLORS, SIZES, DELIVERY_CHARGE, CONTENT_BOTTOM_PADDING } from '../../constants';
 
 const ProductDetailScreen = ({ route, navigation }) => {
   const dispatch = useDispatch();
   const { product } = route.params || {};
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(product?.price || 0);
+  const insets = useSafeAreaInsets();
+  
+  // Calculate bottom padding to ensure action buttons don't hide behind tab bar
+  const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 20;
   const productImageUri = product?.imageUrl || product?.image;
   const productCategoryItemId = product?.productCategoryItemId;
 
@@ -145,10 +151,10 @@ const ProductDetailScreen = ({ route, navigation }) => {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
+return (
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header title={product?.name || 'Product Details'} onBackPress={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={[styles.contentContainer, { paddingBottom: bottomPadding }]}>
         <View style={styles.imageSection}>
           {productImageUri && typeof productImageUri === 'string' && productImageUri.startsWith('http') ? (
             <Image source={{ uri: productImageUri }} style={styles.productImage} />
@@ -179,7 +185,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
           {renderPriceSection()}
         </View>
 
-        <View style={styles.actionSection}>
+<View style={styles.actionSection}>
           <Button
             title="Add to Cart"
             onPress={handleAddToCart}
@@ -194,7 +200,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
           />
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

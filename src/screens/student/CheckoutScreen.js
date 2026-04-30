@@ -6,25 +6,31 @@ import {
   ScrollView,
   Alert,
   Image,
+  SafeAreaView,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createOrder } from '../../redux/slices/orderSlice';
 import { clearCart } from '../../redux/slices/cartSlice';
 import Header from '../../components/common/Header';
 import Input from '../../components/common/Input';
 import Button from '../../components/buttons/Button';
-import { COLORS, SIZES, DELIVERY_CHARGE } from '../../constants';
+import { COLORS, SIZES, DELIVERY_CHARGE, CONTENT_BOTTOM_PADDING } from '../../constants';
 
 const CheckoutScreen = ({ route, navigation }) => {
   const dispatch = useDispatch();
   const { isLoading } = useSelector(state => state.orders);
   const { user } = useSelector(state => state.auth);
   const { items } = route.params || { items: [] };
+  const insets = useSafeAreaInsets();
 
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [contactNumber, setContactNumber] = useState(user?.phoneNumber || user?.phone || '');
   const [orderNotes, setOrderNotes] = useState('');
   const [errors, setErrors] = useState({});
+
+  // Calculate bottom padding to ensure action buttons don't hide behind tab bar
+  const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 20;
 
   const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
   const deliveryCharge = items.length > 0 ? DELIVERY_CHARGE : 0;
@@ -144,10 +150,10 @@ const CheckoutScreen = ({ route, navigation }) => {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
+return (
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header title="Checkout" onBackPress={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={[styles.contentContainer, { paddingBottom: bottomPadding }]}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Items</Text>
           {renderOrderItems()}
@@ -220,9 +226,9 @@ const CheckoutScreen = ({ route, navigation }) => {
             type="outline"
             style={styles.backButton}
           />
-        </View>
+</View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import CustomTabBar from './CustomTabBar';
+import { CONTENT_BOTTOM_PADDING } from '../constants';
 
 import StudentHomeScreen from '../screens/student/StudentHomeScreen';
 import CartScreen from '../screens/student/CartScreen';
@@ -48,7 +49,13 @@ const StudentNavigator = () => {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        contentStyle: { paddingBottom: 110 }
+        // Ensure content respects tab bar spacing
+        contentStyle: { 
+          paddingBottom: CONTENT_BOTTOM_PADDING + 20,
+        },
+        sceneContainerStyle: {
+          paddingBottom: CONTENT_BOTTOM_PADDING + 20,
+        },
       }}
     >
       <Tab.Screen name="Home" component={HomeStack} options={{ tabBarLabel: 'Home' }} />

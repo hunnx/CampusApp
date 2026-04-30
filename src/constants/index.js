@@ -21,6 +21,20 @@ export const ORDER_STATUS = {
 
 export const DELIVERY_CHARGE = 100; // PKR
 
+// ==========================================
+// LAYOUT CONSTANTS - Responsive Spacing
+// ==========================================
+// Tab Bar Height (CustomTabBar)
+export const TAB_BAR_HEIGHT = 72; // Container height
+export const TAB_BAR_BOTTOM_MARGIN = 16; // bottom: 16 in CustomTabBar
+export const TAB_BAR_TOTAL_HEIGHT = TAB_BAR_HEIGHT + TAB_BAR_BOTTOM_MARGIN; // ~88px
+
+// Safe Area Padding (for iPhone notch/Android system bar)
+export const SAFE_AREA_BOTTOM = 16; // Additional safe area padding
+
+// Total bottom spacing needed for content to clear the tab bar
+export const CONTENT_BOTTOM_PADDING = TAB_BAR_TOTAL_HEIGHT + SAFE_AREA_BOTTOM; // ~104px
+
 export const PRODUCT_CATEGORIES = [
   'Food & Beverages',
   'Stationery',

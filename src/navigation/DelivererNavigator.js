@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import CustomTabBar from './CustomTabBar';
+import { CONTENT_BOTTOM_PADDING } from '../constants';
 
 import AvailableOrdersScreen from '../screens/deliverer/AvailableOrdersScreen';
 import ActiveDeliveryScreen from '../screens/deliverer/ActiveDeliveryScreen';
@@ -39,7 +40,7 @@ const DelivererNavigator = () => (
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{
       headerShown: false,
-      contentStyle: { paddingBottom: 110 }
+      contentStyle: { paddingBottom: CONTENT_BOTTOM_PADDING + 20 }
     }}
   >
     <Tab.Screen name="Available" component={AvailableOrdersStack} options={{ tabBarLabel: 'Available' }} />

@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import CustomTabBar from './CustomTabBar';
+import { CONTENT_BOTTOM_PADDING } from '../constants';
 
 import ShopkeeperDashboardScreen from '../screens/shopkeeper/ShopkeeperDashboardScreen';
 import ProductsScreen from '../screens/shopkeeper/ProductsScreen';
@@ -40,7 +41,7 @@ const ShopkeeperNavigator = () => (
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{
       headerShown: false,
-      contentStyle: { paddingBottom: 110 }
+      contentStyle: { paddingBottom: CONTENT_BOTTOM_PADDING + 20 }
     }}
   >
     <Tab.Screen name="Dashboard" component={DashboardStack} options={{ tabBarLabel: 'Dashboard' }} />

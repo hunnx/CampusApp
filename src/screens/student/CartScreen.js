@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
+  SafeAreaView,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../theme/ThemeContext';
-import { BORDER_RADIUS, FONTS, DELIVERY_CHARGE } from '../../constants';
+import { BORDER_RADIUS, FONTS, DELIVERY_CHARGE, CONTENT_BOTTOM_PADDING } from '../../constants';
 import ModernCard from '../../components/common/ModernCard';
 import ModernButton from '../../components/common/ModernButton';
 import EmptyState from '../../components/common/EmptyState';
@@ -20,10 +22,15 @@ const CartScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { colors } = useTheme();
   const { items: cartItems, totalItems } = useSelector(state => state.cart);
+  const insets = useSafeAreaInsets();
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
   const deliveryCharge = cartItems.length > 0 ? DELIVERY_CHARGE : 0;
   const finalTotal = subtotal + deliveryCharge;
+
+  // Calculate the bottom padding needed to prevent the summary card from being hidden
+  // behind the tab bar. Tab bar is at bottom: 16 with height: 72, so total ~88px
+  const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 20;
 
   const handleQuantityChange = (productCategoryItemId, change) => {
     const item = cartItems.find(c => String(c.productCategoryItemId) === String(productCategoryItemId));
@@ -83,8 +90,8 @@ const CartScreen = ({ navigation }) => {
     )
   );
 
-  if (cartItems.length === 0) {
-    return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
+if (cartItems.length === 0) {
+    return React.createElement(SafeAreaView, { style: [styles.container, { backgroundColor: colors.background }], edges: ['top'] },
       React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
         React.createElement(Text, { style: styles.headerTitle }, 'Shopping Cart')
       ),
@@ -98,7 +105,7 @@ const CartScreen = ({ navigation }) => {
     );
   }
 
-  return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
+  return React.createElement(SafeAreaView, { style: [styles.container, { backgroundColor: colors.background }], edges: ['top'] },
     React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
       React.createElement(View, { style: styles.headerTop },
         React.createElement(Text, { style: styles.headerTitle }, 'Shopping Cart'),
@@ -113,11 +120,11 @@ const CartScreen = ({ navigation }) => {
       data: cartItems,
       renderItem: renderItem,
       keyExtractor: (item) => item.productCategoryItemId.toString(),
-      contentContainerStyle: { paddingTop: 16, paddingBottom: 200 },
+      contentContainerStyle: { paddingTop: 16, paddingBottom: bottomPadding },
       showsVerticalScrollIndicator: false,
     }),
 
-    React.createElement(View, { style: [styles.summaryCard, { backgroundColor: colors.surface }] },
+    React.createElement(View, { style: [styles.summaryCard, { backgroundColor: colors.surface, paddingBottom: insets.bottom + 20 }] },
       React.createElement(View, { style: styles.summaryRow },
         React.createElement(Text, { style: [styles.summaryLabel, { color: colors.gray }] }, 'Subtotal (' + totalItems + ' items)'),
         React.createElement(Text, { style: [styles.summaryValue, { color: colors.dark }] }, 'PKR ' + subtotal)

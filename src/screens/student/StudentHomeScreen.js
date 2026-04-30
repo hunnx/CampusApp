@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,17 +7,19 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from '../../components/common/Header';
-import { COLORS, SIZES } from '../../constants';
+import BottomSpacerView from '../../components/common/BottomSpacerView';
+import { COLORS, SIZES, CONTENT_BOTTOM_PADDING } from '../../constants';
 import { fetchProducts } from '../../redux/slices/productSlice';
 
 const StudentHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
 
   const { products, isLoading, error } = useSelector(state => state.products);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
   
   useEffect(() => {
     dispatch(fetchProducts());
@@ -62,18 +64,18 @@ const StudentHomeScreen = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <Header title="🎓 Student Home" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading products...</Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header title="🎓 Student Home" />
       {error && (
         <View style={styles.errorContainer}>
@@ -82,7 +84,6 @@ const StudentHomeScreen = ({ navigation }) => {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-
       )}
       <FlatList
         style={styles.scrollView}
@@ -95,6 +96,7 @@ const StudentHomeScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         initialNumToRender={6}
         windowSize={10}
+        scrollIndicatorInsets={{ bottom: CONTENT_BOTTOM_PADDING }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -102,6 +104,7 @@ const StudentHomeScreen = ({ navigation }) => {
             colors={[COLORS.primary]}
           />
         }
+        ListFooterComponent={<BottomSpacerView />}
         ListEmptyComponent={
           !isLoading && products.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -113,7 +116,7 @@ const StudentHomeScreen = ({ navigation }) => {
           ) : null
         }
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -128,7 +131,9 @@ const styles = StyleSheet.create({
   productsContainer: {
     paddingHorizontal: SIZES.padding,
     paddingTop: SIZES.padding,
-    paddingBottom: SIZES.padding * 4,
+    // Generous bottom padding ensures last item can scroll completely above tab bar
+    // Formula: TabBar Height (72) + Bottom Margin (16) + Safe Area (16) + Extra Buffer (30)
+    paddingBottom: CONTENT_BOTTOM_PADDING + SIZES.padding,
   },
   columnWrapper: {
     justifyContent: 'space-between',

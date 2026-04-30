@@ -5,17 +5,23 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '../../components/common/Header';
 import Button from '../../components/buttons/Button';
-import { COLORS, SIZES, ORDER_STATUS } from '../../constants';
+import { COLORS, SIZES, ORDER_STATUS, CONTENT_BOTTOM_PADDING } from '../../constants';
 
 const OrderTrackingScreen = ({ route, navigation }) => {
   const { orders } = useSelector(state => state.orders);
+  const insets = useSafeAreaInsets();
   
   const { orderId } = route.params || {};
   const [order, setOrder] = useState(null);
+  
+  // Calculate bottom padding to ensure content doesn't hide behind tab bar
+  const bottomPadding = CONTENT_BOTTOM_PADDING + insets.bottom + 20;
 
   const loadOrderDetails = useCallback(() => {
     const foundOrder = orders.find(o => String(o.id) === String(orderId));
@@ -242,9 +248,9 @@ const OrderTrackingScreen = ({ route, navigation }) => {
     ) : null;
   };
 
-  if (!order) {
+if (!order) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Order not found</Text>
         <Text style={styles.errorText}>Order ID: {orderId}</Text>
         <Text style={styles.errorText}>Available orders: {orders.length}</Text>
@@ -253,14 +259,14 @@ const OrderTrackingScreen = ({ route, navigation }) => {
           onPress={() => navigation.goBack()} 
           style={{ marginTop: SIZES.padding }}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Header title="Order Tracking" onBackPress={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={[styles.contentContainer, { paddingBottom: bottomPadding }]}>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
           <Text style={styles.statusText}>{order.status?.toUpperCase() || 'UNKNOWN'}</Text>
         </View>
@@ -268,9 +274,9 @@ const OrderTrackingScreen = ({ route, navigation }) => {
         {renderTimeline()}
         {renderOrderInfo()}
         {renderOrderItems()}
-        {renderActions()}
+{renderActions()}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
