@@ -177,9 +177,8 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
     return (
       <FlatList
         data={filteredOrders}
-        keyExtractor={(item) => String(item.id)}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
+        keyExtractor={(item, index) => `order-${item.id}-${index}`}
+        numColumns={1}
         renderItem={({ item }) => (
           <OrderCard
             order={item}
@@ -194,8 +193,10 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
           // Center empty state when no orders
           filteredOrders.length === 0 && { flex: 1 },
         ]}
-        initialNumToRender={8}
-        removeClippedSubviews={true}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={false}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={onRefresh}
@@ -306,14 +307,9 @@ const styles = StyleSheet.create({
     padding: SIZES.base,
     paddingBottom: SIZES.padding * 4,
   },
-  columnWrapper: {
-    justifyContent: 'space-between',
-    marginBottom: SIZES.base,
-  },
   orderCard: {
-    width: '48%',
+    width: '100%',
     marginBottom: SIZES.base,
-    minWidth: 0,
   },
   emptyContainer: {
     flex: 1,

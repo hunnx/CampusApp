@@ -120,14 +120,14 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
       contentContainerStyle: { paddingBottom: 40 },
     },
       // Stats Grid
-      React.createElement(View, { style: styles.statsGrid },
+      /* React.createElement(View, { style: styles.statsGrid },
         stats.map(stat => React.createElement(ModernCard, {
           key: stat.key,
           onPress: () => handleCardPress(stat.key),
           variant: 'elevated',
           borderRadius: BORDER_RADIUS.xl,
           padding: 20,
-          style: { width: '48%', alignItems: 'center', marginBottom: 12 },
+          style: { width: '100%', alignItems: 'center', marginBottom: 12 },
         },
           React.createElement(View, { style: [styles.statIcon, { backgroundColor: stat.color + '18' }] },
             React.createElement(Icon, { name: stat.icon, size: 24, color: stat.color })
@@ -136,6 +136,71 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
           React.createElement(Text, { style: [styles.statTitle, { color: colors.gray }] }, stat.title)
         ))
       ),
+ */
+
+
+  React.createElement(
+  View,
+  {
+    style: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      marginTop: 16,
+    },
+  },
+  stats.map(stat =>
+    React.createElement(
+      ModernCard,
+      {
+        key: stat.key,
+        onPress: () => handleCardPress(stat.key),
+        variant: 'elevated',
+        borderRadius: BORDER_RADIUS.xl,
+        padding: 16,
+        style: {
+          width: '48%',
+          marginBottom: 12,
+        },
+      },
+      React.createElement(
+        View,
+        {
+          style: [
+            styles.statIcon,
+            { backgroundColor: stat.color + '18' },
+          ],
+        },
+        React.createElement(Icon, {
+          name: stat.icon,
+          size: 24,
+          color: stat.color,
+        })
+      ),
+
+      React.createElement(
+        View,
+        {
+          style: {
+            flexDirection: 'column',
+            marginTop: 10,
+          },
+        },
+        React.createElement(
+          Text,
+          { style: [styles.statValue, { color: colors.dark }] },
+          String(stat.value)
+        ),
+        React.createElement(
+          Text,
+          { style: [styles.statTitle, { color: colors.gray }] },
+          stat.title
+        )
+      )
+    )
+  )
+),
 
       // Quick Actions
       React.createElement(ModernCard, {
@@ -200,7 +265,16 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: FONTS.h1.size, fontWeight: '800', color: '#FFFFFF' },
   headerSubtitle: { fontSize: FONTS.bodySmall.size, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
   iconBtn: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: -20, marginBottom: 16 },
+statsGrid: {
+  backgroundColor: '#00000',
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  width: '100%',
+  paddingHorizontal: 16,
+  marginTop: -20,
+  marginBottom: 16,
+  justifyContent: 'flex-start', // or 'space-between' only if needed inside
+},
   statIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   statValue: { fontSize: 24, fontWeight: '700', marginBottom: 4 },
   statTitle: { fontSize: 12, fontWeight: '500' },
