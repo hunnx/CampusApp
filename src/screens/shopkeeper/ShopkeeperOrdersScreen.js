@@ -194,6 +194,9 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
           // Center empty state when no orders
           filteredOrders.length === 0 && { flex: 1 },
         ]}
+        initialNumToRender={8}
+        removeClippedSubviews={true}
+        showsVerticalScrollIndicator={false}
         refreshing={refreshing}
         onRefresh={onRefresh}
         ListHeaderComponent={renderFilterTabs}
@@ -308,8 +311,7 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.base,
   },
   orderCard: {
-    flex: 1,
-    marginHorizontal: SIZES.base / 2,
+    width: '48%',
     marginBottom: SIZES.base,
     minWidth: 0,
   },

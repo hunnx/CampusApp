@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Dimensions,
   RefreshControl,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,8 +21,7 @@ import ModernButton from '../../components/common/ModernButton';
 import Badge from '../../components/common/Badge';
 import { transformDashboardStats } from '../../utils/dataTransformers';
 
-const { width } = Dimensions.get('window');
-const cardWidth = (width - 56) / 2;
+// Use percentage widths for responsive 2-column layout instead of fixed pixel widths
 
 const ShopkeeperDashboardScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -129,7 +127,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
           variant: 'elevated',
           borderRadius: BORDER_RADIUS.xl,
           padding: 20,
-          style: { width: cardWidth, alignItems: 'center' },
+          style: { width: '48%', alignItems: 'center', marginBottom: 12 },
         },
           React.createElement(View, { style: [styles.statIcon, { backgroundColor: stat.color + '18' }] },
             React.createElement(Icon, { name: stat.icon, size: 24, color: stat.color })

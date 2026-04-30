@@ -86,8 +86,9 @@ const StudentProfileScreen = ({ navigation }) => {
     { icon: 'help-circle-outline', title: 'Help & Support', subtitle: 'Get help with your orders', action: () => Alert.alert('Help & Support', 'For support, please contact: support@campusapp.com') },
   ];
 
-  return React.createElement(ScrollView, {
+return React.createElement(ScrollView, {
     style: [styles.container, { backgroundColor: colors.background }],
+    contentContainerStyle: { paddingBottom: 60 },
     showsVerticalScrollIndicator: false,
   },
     // Header with avatar

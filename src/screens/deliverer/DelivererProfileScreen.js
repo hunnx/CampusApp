@@ -280,8 +280,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.light,
   },
-  contentContainer: {
-    paddingBottom: SIZES.padding * 2,
+contentContainer: {
+    paddingBottom: 60,
   },
   profileHeader: {
     backgroundColor: COLORS.white,

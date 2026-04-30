@@ -53,7 +53,9 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             color: isFocused ? colors.primary : colors.grayLight,
           }),
           isFocused && React.createElement(Text, {
-            style: [styles.label, { color: colors.primary }]
+            style: [styles.label, { color: colors.primary }],
+            numberOfLines: 1,
+            ellipsizeMode: 'tail',
           }, label)
         )
       );
@@ -86,6 +88,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 6,
+    maxWidth: 80,
+    overflow: 'hidden',
+    flexShrink: 1,
   },
 });
 
