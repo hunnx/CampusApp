@@ -10,12 +10,13 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logout } from '../../redux/slices/authSlice';
 import { fetchShopkeeperOrders } from '../../redux/slices/orderSlice';
 import socketService from '../../services/socket';
 import api from '../../services/api';
 import { useTheme } from '../../theme/ThemeContext';
-import { BORDER_RADIUS, FONTS, SHADOWS, ORDER_STATUS } from '../../constants';
+import { BORDER_RADIUS, FONTS, SHADOWS, ORDER_STATUS, TAB_BAR_TOTAL_HEIGHT } from '../../constants';
 import ModernCard from '../../components/common/ModernCard';
 import ModernButton from '../../components/common/ModernButton';
 import Badge from '../../components/common/Badge';
@@ -29,6 +30,7 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
   const { user } = useSelector(state => state.auth);
   const { orders } = useSelector(state => state.orders);
   const ordersList = orders || [];
+  const insets = useSafeAreaInsets();
 
   const [refreshing, setRefreshing] = useState(false);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -93,12 +95,16 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
 
   const handleLogout = () => dispatch(logout());
 
-  const stats = [
+const stats = [
     { key: 'categories', title: 'Categories', icon: 'grid-outline', color: colors.info, value: dashboardStats.categories },
     { key: 'products', title: 'Products', icon: 'cube-outline', color: colors.accent, value: dashboardStats.totalProducts },
     { key: 'orders', title: 'Orders', icon: 'receipt-outline', color: colors.warning, value: dashboardStats.totalOrders },
     { key: 'completed', title: 'Completed', icon: 'checkmark-circle-outline', color: colors.success, value: dashboardStats.completedOrders },
   ];
+
+  // Dynamic bottom padding to ensure content stays above the bottom tab bar
+  // TAB_BAR_TOTAL_HEIGHT (~88px) + insets.bottom (safe area) + extra padding (20px)
+  const bottomPadding = TAB_BAR_TOTAL_HEIGHT + insets.bottom + 20;
 
   return React.createElement(View, { style: [styles.container, { backgroundColor: colors.background }] },
     React.createElement(View, { style: [styles.header, { backgroundColor: colors.primary }] },
@@ -114,10 +120,10 @@ const ShopkeeperDashboardScreen = ({ navigation }) => {
       )
     ),
 
-    React.createElement(ScrollView, {
+React.createElement(ScrollView, {
       showsVerticalScrollIndicator: false,
       refreshControl: React.createElement(RefreshControl, { refreshing: refreshing, onRefresh: onRefresh }),
-      contentContainerStyle: { paddingBottom: 40 },
+      contentContainerStyle: { paddingBottom: bottomPadding },
     },
       // Stats Grid
       /* React.createElement(View, { style: styles.statsGrid },
