@@ -92,12 +92,13 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
     console.log('Order pressed:', order);
   };
 
-  const getFilteredOrders = () => {
+const getFilteredOrders = () => {
     if (!Array.isArray(ordersList)) {
       return [];
     }
 
-    let filtered = ordersList;
+    // Create shallow copy to avoid mutating frozen Redux state
+    let filtered = [...ordersList];
     
     if (selectedFilter !== 'All') {
       filtered = filtered.filter(order => order.status === selectedFilter);
@@ -110,11 +111,12 @@ const ShopkeeperOrdersScreen = ({ navigation, route }) => {
     });
   };
 
-  const getStatusCount = (status) => {
+const getStatusCount = (status) => {
     if (!Array.isArray(ordersList)) {
       return 0;
     }
-    return ordersList.filter(order => order.status === status).length;
+    // Create shallow copy to avoid mutating frozen Redux state
+    return [...ordersList].filter(order => order.status === status).length;
   };
 
   const renderFilterTabs = () => {
